@@ -1,0 +1,128 @@
+# Metadata for the actions workflow
+name: CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "*" ]
+
+# Environment variables that will be set on all runners
+env:
+  CI_DEV_SHELL: "nix --store ~/nix_store develop '.#ci'"
+  CARGO_TERM_COLOR: always   # Always colour Cargo's output.
+  CARGO_INCREMENTAL: 0       # Always run without incremental builds on CI.
+  CARGO_PROFILE_DEV_DEBUG: 0 # Don't embed debug info even though the build is a dev build.
+
+# Configuration for individual jobs
+jobs:
+
+  # This job is responsible for running the unit and integration tests.
+  test:
+    name: "Test"
+    strategy:
+      fail-fast: false
+      matrix:
+#        os: [ "ubuntu-latest", "macos-latest" ]
+         os: [ "ubuntu-latest" ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Lix
+        shell: "bash"
+        run: |
+          curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
+      - name: Restore Nix Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            ~/nix_store
+          key: nix-${{ hashFiles('**/flake.lock') }}-${{ matrix.os }}
+      - name: Restore Rust Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            target/
+          key: rust-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.os }}
+      - name: Build Lix Dependencies
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }}
+      - name: Build Tests
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }} --command cargo test --all-targets --no-run
+      - name: Run Tests
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }} --command cargo test --all-targets -- --nocapture
+
+  # This job runs the linter.
+  lint:
+    name: "Lint"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Lix
+        shell: "bash"
+        run: |
+          curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
+      - name: Restore Nix Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            ~/nix_store
+          key: nix-${{ hashFiles('**/flake.lock') }}-ubuntu-latest
+      - name: Restore Rust Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            target/
+          key: rust-${{ hashFiles('**/Cargo.lock') }}-ubuntu-latest
+      - name: Build Lix Dependencies
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }}
+      - name: Lint Code
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }} --command cargo clippy --all-targets
+
+  # This job checks the code formatting.
+  formatting:
+    name: "Check Formatting"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Lix
+        shell: "bash"
+        run: |
+          curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
+      - name: Restore Nix Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            ~/nix_store
+          key: nix-${{ hashFiles('**/flake.lock') }}-ubuntu-latest
+      - name: Restore Rust Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            target/
+          key: rust-${{ hashFiles('**/Cargo.lock') }}-ubuntu-latest
+      - name: Build Lix Dependencies
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }}
+      - name: Check Formatting
+        shell: "bash"
+        run: |
+          ${{ env.CI_DEV_SHELL }} --command cargo fmt --all -- --check

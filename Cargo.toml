@@ -1,0 +1,30 @@
+[package]
+name = "llvm-to-cairo"
+version = "0.1.0"
+homepage = "https://github.com/reilabs/llvm-to-cairo"
+repository = "https://github.com/reilabs/llvm-to-cairo"
+license-file = "LICENSE"
+
+authors = ["Reilabs"]
+description = "A compiler to allow LLVM bytecode to run on the Starknet ecosystem in a provable fashion."
+keywords = ["compiler", "starknet", "starkware"]
+categories = ["compilers", "virtualization", "cryptography::cryptocurrencies"]
+
+edition = "2021"
+rust-version = "1.80.1"
+
+[dependencies]
+ariadne = "0.4.1"
+clap = "4.5.16"
+inkwell = { version = "0.5.0", features = ["llvm18-0"] }
+miette = "7.2.0"
+thiserror = "1.0.63"
+tracing = "0.1.40"
+
+[dev-dependencies]
+anyhow = "1.0.86"
+
+[profile.release]
+debug = true             # Include full debug information in release builds.
+overflow-checks = true   # Keep overflow checks in production builds.
+lto = "thin"             # Thin LTO performs cross-crate LTO while not bloating the build time too much.
