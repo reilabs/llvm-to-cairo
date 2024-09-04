@@ -8,7 +8,8 @@ on:
 
 # Environment variables that will be set on all runners
 env:
-  CI_DEV_SHELL: "nix --store ~/nix_store develop '.#ci'"
+  DEV_SHELL_LINUX: "nix --store ~/nix_store develop '.#ci'"
+  DEV_SHELL_MACOS: "nix develop '.#ci'"
   CARGO_TERM_COLOR: always   # Always colour Cargo's output.
   CARGO_INCREMENTAL: 0       # Always run without incremental builds on CI.
   CARGO_PROFILE_DEV_DEBUG: 0 # Don't embed debug info even though the build is a dev build.
@@ -16,14 +17,13 @@ env:
 # Configuration for individual jobs
 jobs:
 
-  # This job is responsible for running the unit and integration tests.
+  # This job is responsible for running the unit and integration tests
   test:
     name: "Test"
     strategy:
       fail-fast: false
       matrix:
-#        os: [ "ubuntu-latest", "macos-latest" ]
-         os: [ "ubuntu-latest" ]
+        os: [ "ubuntu-latest", "macos-latest" ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
@@ -32,8 +32,19 @@ jobs:
         shell: "bash"
         run: |
           curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
+      - name: Setup Devshell Command
+        shell: "bash"
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+              echo "DEV_SHELL=${{ env.DEV_SHELL_LINUX }}" >> $GITHUB_ENV
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+              echo "DEV_SHELL=${{ env.DEV_SHELL_MACOS }}" >> $GITHUB_ENV
+          else
+              exit 1
+          fi
       - name: Restore Nix Cache
         uses: actions/cache@v3
+        if: runner.os != 'macOS'
         continue-on-error: true
         with:
           path: |
@@ -49,15 +60,15 @@ jobs:
       - name: Build Lix Dependencies
         shell: "bash"
         run: |
-          ${{ env.CI_DEV_SHELL }}
+          eval "$DEV_SHELL"
       - name: Build Tests
         shell: "bash"
         run: |
-          ${{ env.CI_DEV_SHELL }} --command cargo test --all-targets --no-run
+          eval "$DEV_SHELL --command cargo test --all-targets --no-run"
       - name: Run Tests
         shell: "bash"
         run: |
-          ${{ env.CI_DEV_SHELL }} --command cargo test --all-targets -- --nocapture
+          eval "$DEV_SHELL --command cargo test --all-targets -- --nocapture"
 
   # This job runs the linter.
   lint:
@@ -67,7 +78,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Install Lix
-        shell: "bash"
+        shell: bash
         run: |
           curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
       - name: Restore Nix Cache
@@ -85,13 +96,13 @@ jobs:
             target/
           key: rust-${{ hashFiles('**/Cargo.lock') }}-ubuntu-latest
       - name: Build Lix Dependencies
-        shell: "bash"
+        shell: bash
         run: |
-          ${{ env.CI_DEV_SHELL }}
+          ${{ env.DEV_SHELL_LINUX }}
       - name: Lint Code
-        shell: "bash"
+        shell: bash
         run: |
-          ${{ env.CI_DEV_SHELL }} --command cargo clippy --all-targets
+          ${{ env.DEV_SHELL_LINUX }} --command cargo clippy --all-targets
 
   # This job checks the code formatting.
   formatting:
@@ -101,7 +112,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Install Lix
-        shell: "bash"
+        shell: bash
         run: |
           curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
       - name: Restore Nix Cache
@@ -119,10 +130,10 @@ jobs:
             target/
           key: rust-${{ hashFiles('**/Cargo.lock') }}-ubuntu-latest
       - name: Build Lix Dependencies
-        shell: "bash"
+        shell: bash
         run: |
-          ${{ env.CI_DEV_SHELL }}
+          ${{ env.DEV_SHELL_LINUX }}
       - name: Check Formatting
-        shell: "bash"
+        shell: bash
         run: |
-          ${{ env.CI_DEV_SHELL }} --command cargo fmt --all -- --check
+          ${{ env.DEV_SHELL_LINUX }} --command cargo fmt --all -- --check
