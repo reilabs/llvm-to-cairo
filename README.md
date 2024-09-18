@@ -5,12 +5,12 @@ This repository contains the efforts to enable compilation of LLVM bytecode to r
 goals of this project are threefold:
 
 1. **Provable Rust Execution:** To provide the ability to prove the execution of LLVM bytecode using
-   Starknet's proving infrastructure, thereby allowing verification of said execution. 
+   Starknet's proving infrastructure, thereby allowing verification of said execution.
 2. **Writing Contracts in LLVM Languages:** To provide the ability to write contracts for execution
    on Starknet using any language that compiles to LLVM (while recognizing that this will require a
    small per-language effort).
 3. **Using Foreign Libraries from Cairo:** There exist a wealth of useful cryptographic libraries in
-   languages such as Rust that compile to LLVM. Rather than requiring users to reimplement them in 
+   languages such as Rust that compile to LLVM. Rather than requiring users to reimplement them in
    [Cairo](https://www.cairo-lang.org), this effort would allow them to be exposed directly.
 
 The initial efforts for this project are focusing on using [Rust](https://rust-lang.org) as the
@@ -23,8 +23,8 @@ the language-specific libraries.
 As there is a significant mismatch between the computational model expected by LLVM, and the Cairo
 model of execution, we take a multi-layered approach.
 
-- **Compilation:** Where there is a direct correspondence between LLVM and Cairo's semantics, we can 
-  perform direct compilation, generating Cairo's `FlatLowered` IR from LLVM IR. 
+- **Compilation:** Where there is a direct correspondence between LLVM and Cairo's semantics, we can
+  perform direct compilation, generating Cairo's `FlatLowered` IR from LLVM IR.
 - **Polyfills:** Where there is a mismatch, we have to implement the mismatched operation as an
   _emulation_ or a _polyfill_. These will implement the expected semantics (often given by
   [compiler-rt](https://compiler-rt.llvm.org)) as Cairo code that can then be called into by the

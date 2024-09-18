@@ -25,7 +25,7 @@
         fenixLib = fenix.packages.${system};
         fenixStable = fenixLib.fromToolchainName {
             name = rustVersion;
-            sha256 = "sha256-3jVIIf5XPnUU1CRaTyAiO0XHVbJl12MSx3eucTXCjtE=";
+            sha256 = "sha256-VZZnlyP69+Y3crrLHQyJirqlHrTtGTsyiSnZB8jEvVo=";
         };
 
         # As we want nightly Rustfmt, we have to build a custom toolchain.
@@ -66,6 +66,10 @@
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
           inputsFrom = [
             llvmToCairo
+          ];
+
+          packages = [
+            pkgs.nodejs_22
           ];
 
           shellHook = ''

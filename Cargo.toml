@@ -11,12 +11,20 @@ keywords = ["compiler", "starknet", "starkware"]
 categories = ["compilers", "virtualization", "cryptography::cryptocurrencies"]
 
 edition = "2021"
-rust-version = "1.80.1"
+rust-version = "1.81.0"
 
 [dependencies]
 ariadne = "0.4.1"
+cairo-lang-compiler = "2.8.2"
+cairo-lang-debug = "2.8.2"
+cairo-lang-diagnostics = "2.8.2"
+cairo-lang-eq-solver = "2.8.2"
+cairo-lang-lowering = "2.8.2"
+cairo-lang-semantic = "2.8.2"
+cairo-lang-utils = "2.8.2"
 clap = "4.5.16"
 inkwell = { version = "0.5.0", features = ["llvm18-0"] }
+itertools = "0.13.0"
 miette = "7.2.0"
 thiserror = "1.0.63"
 tracing = "0.1.40"
@@ -25,6 +33,10 @@ tracing = "0.1.40"
 anyhow = "1.0.86"
 
 [profile.release]
-debug = true             # Include full debug information in release builds.
-overflow-checks = true   # Keep overflow checks in production builds.
-lto = "thin"             # Thin LTO performs cross-crate LTO while not bloating the build time too much.
+debug = true           # Include full debug information in release builds.
+overflow-checks = true # Keep overflow checks in production builds.
+lto = "thin"           # Thin LTO performs cheaper cross-crate LTO.
+
+[[bin]]
+name = "ltc"             # Named for Llvm-To-Cairo
+path = "src/bin/main.rs"

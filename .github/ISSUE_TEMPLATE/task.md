@@ -3,7 +3,7 @@ name: Task
 about: A development task to be done.
 title: "[TASK] "
 labels: enhancement
-assignees: ''
+assignees: ""
 ---
 
 # Description
