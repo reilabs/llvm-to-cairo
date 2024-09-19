@@ -3,4 +3,9 @@
 
 # Tooling
 .idea/
+node_modules/
 result
+
+# Linting and Formatting
+package-lock.json
+.husky/_

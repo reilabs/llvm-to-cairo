@@ -1,0 +1,21 @@
+{
+  "devDependencies": {
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "3.3.3",
+    "prettier-plugin-toml": "2.0.1"
+  },
+  "lint-staged": {
+    "(*.md|*.toml|*.json|*.yaml|*.yml|*.css|*.js|*.ts)": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged && cargo clippy -- -D warnings"
+    }
+  },
+  "scripts": {
+    "prepare": "husky"
+  }
+}

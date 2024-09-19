@@ -2,28 +2,27 @@
 name: CI
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "*" ]
+    branches: ["*"]
 
 # Environment variables that will be set on all runners
 env:
   DEV_SHELL_LINUX: "nix --store ~/nix_store develop '.#ci'"
   DEV_SHELL_MACOS: "nix develop '.#ci'"
-  CARGO_TERM_COLOR: always   # Always colour Cargo's output.
-  CARGO_INCREMENTAL: 0       # Always run without incremental builds on CI.
+  CARGO_TERM_COLOR: always # Always colour Cargo's output.
+  CARGO_INCREMENTAL: 0 # Always run without incremental builds on CI.
   CARGO_PROFILE_DEV_DEBUG: 0 # Don't embed debug info even though the build is a dev build.
 
 # Configuration for individual jobs
 jobs:
-
   # This job is responsible for running the unit and integration tests
   test:
     name: "Test"
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu-latest", "macos-latest" ]
+        os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
@@ -72,7 +71,7 @@ jobs:
 
   # This job runs the linter.
   lint:
-    name: "Lint"
+    name: "Lint Code"
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout Code
@@ -102,9 +101,9 @@ jobs:
       - name: Lint Code
         shell: bash
         run: |
-          ${{ env.DEV_SHELL_LINUX }} --command cargo clippy --all-targets
+          ${{ env.DEV_SHELL_LINUX }} --command cargo clippy --all-targets --all-features
 
-  # This job checks the code formatting.
+  # This job checks the formatting of the code and other artifacts.
   formatting:
     name: "Check Formatting"
     runs-on: "ubuntu-latest"
@@ -137,3 +136,11 @@ jobs:
         shell: bash
         run: |
           ${{ env.DEV_SHELL_LINUX }} --command cargo fmt --all -- --check
+      - name: Install Node Deps
+        shell: bash
+        run: |
+          ${{ env.DEV_SHELL_LINUX }} --command npm install
+      - name: Lint Documentation
+        shell: bash
+        run: |
+          ${{ env.DEV_SHELL_LINUX }} --command npx prettier --check .
