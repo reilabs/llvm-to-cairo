@@ -1,0 +1,23 @@
+[package]
+name = "ltc-driver"
+version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file.workspace = true
+
+authors.workspace = true
+description = "The compiler driver responsible for plumbing together the various portions of the compilation process."
+keywords.workspace = true
+categories.workspace = true
+
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ariadne.workspace = true
+cairo-lang-lowering.workspace = true
+cairo-lang-sierra-generator.workspace = true
+cairo-lang-utils.workspace = true
+itertools.workspace = true
+thiserror.workspace = true
+tracing.workspace = true

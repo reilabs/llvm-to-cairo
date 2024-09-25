@@ -1,0 +1,19 @@
+[package]
+name = "ltc-rust-test-input"
+version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file.workspace = true
+
+authors.workspace = true
+description = "Rust input files for compilation to LLVM IR for use as test inputs to the compiler."
+keywords.workspace = true
+categories.workspace = true
+
+edition.workspace = true
+rust-version.workspace = true
+
+# Make these specifically impossible to publish as they have no independent use.
+publish = false
+
+[dependencies]

@@ -1,0 +1,28 @@
+[package]
+name = "ltc-compiler"
+version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file.workspace = true
+
+authors.workspace = true
+description = "A compiler to allow LLVM bytecode to run on the Starknet ecosystem in a provable fashion."
+keywords.workspace = true
+categories.workspace = true
+
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cairo-lang-compiler.workspace = true
+cairo-lang-debug.workspace = true
+cairo-lang-lowering.workspace = true
+cairo-lang-semantic.workspace = true
+clap.workspace = true
+inkwell = { version = "0.5.0", features = ["llvm18-0"] }
+itertools.workspace = true
+ltc-errors.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true

@@ -1,19 +1,27 @@
-[package]
-name = "llvm-to-cairo"
+# We use a workspace to centralize dependency and metadata management for the crates in this
+# workspace.
+[workspace]
+resolver = "2"
+members = ["crates/cli", "crates/compiler", "crates/driver", "crates/error", "crates/rust-test-input"]
+
+# Here we set keys that are relevant across all packages, allowing them to be inherited.
+[workspace.package]
 version = "0.1.0"
 homepage = "https://github.com/reilabs/llvm-to-cairo"
 repository = "https://github.com/reilabs/llvm-to-cairo"
 license-file = "LICENSE"
 
 authors = ["Reilabs"]
-description = "A compiler to allow LLVM bytecode to run on the Starknet ecosystem in a provable fashion."
 keywords = ["compiler", "starknet", "starkware"]
 categories = ["compilers", "virtualization", "cryptography::cryptocurrencies"]
 
 edition = "2021"
 rust-version = "1.81.0"
 
-[dependencies]
+# Dependencies that are used by more than one crate are specified here, allowing us to ensure that
+# we match versions in all crates.
+[workspace.dependencies]
+anyhow = "1.0.89"
 ariadne = "0.4.1"
 cairo-lang-compiler = "2.8.2"
 cairo-lang-debug = "2.8.2"
@@ -21,22 +29,17 @@ cairo-lang-diagnostics = "2.8.2"
 cairo-lang-eq-solver = "2.8.2"
 cairo-lang-lowering = "2.8.2"
 cairo-lang-semantic = "2.8.2"
+cairo-lang-sierra-generator = "2.8.2"
 cairo-lang-utils = "2.8.2"
 clap = "4.5.16"
-inkwell = { version = "0.5.0", features = ["llvm18-0"] }
 itertools = "0.13.0"
-miette = "7.2.0"
+ltc-cli = { path = "crates/cli" }
+ltc-driver = { path = "crates/driver" }
+ltc-errors = { path = "crates/error" }
 thiserror = "1.0.63"
 tracing = "0.1.40"
-
-[dev-dependencies]
-anyhow = "1.0.86"
 
 [profile.release]
 debug = true           # Include full debug information in release builds.
 overflow-checks = true # Keep overflow checks in production builds.
 lto = "thin"           # Thin LTO performs cheaper cross-crate LTO.
-
-[[bin]]
-name = "ltc"             # Named for Llvm-To-Cairo
-path = "src/bin/main.rs"
