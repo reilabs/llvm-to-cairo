@@ -63,9 +63,9 @@ provides all of these, or to have the following installed and available on your 
 
 Due to the complexities of getting some IDEs to work with nix-based Rust projects, we recommend
 using a system-wide installation of the correct toolchain (as specified in
-[`Cargo.toml`](../Cargo.toml)). Then, we recommend launching your IDE from the development shell
-provided by `nix develop`, as this will give it the correct environment variables to find the LLVM
-install.
+[`Cargo.toml`](../crates/compiler/Cargo.toml)). Then, we recommend launching your IDE from the
+development shell provided by `nix develop`, as this will give it the correct environment variables
+to find the LLVM install.
 
 We cannot provide instructions for all IDEs out of the box, but please feel free to add instructions
 for your own IDE or editor here if you are working on the project.

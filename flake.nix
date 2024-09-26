@@ -18,10 +18,11 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         # We grab our expected rust version from the Cargo.toml.
-        rustVersion = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package.rust-version;
+        rustVersion = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.rust-version;
 
         # Then we set up our libraries for building this thing.
         pkgs = nixpkgs.legacyPackages.${system};
+        inherit (pkgs) lib;
         fenixLib = fenix.packages.${system};
         fenixStable = fenixLib.fromToolchainName {
             name = rustVersion;
@@ -45,9 +46,19 @@
         # to have.
         craneLib = (crane.mkLib pkgs).overrideToolchain fenixToolchain;
 
-        # Then we build our actual package, which is our application.
-        llvmToCairo = pkgs.callPackage ./package.nix {
+        # Collect our workspace packages, including our application.
+        workspacePackages = pkgs.callPackage ./workspace.nix {
           inherit craneLib;
+        };
+
+        # Filter out things that aren't derivations for the `packages` output, or Nix gets mad.
+        llvmToCairo = lib.filterAttrs (lib.const lib.isDerivation) workspacePackages;
+
+        # And for convenience, collect all the workspace members into a single derivation,
+        # so we can check they all compile with one command, `nix build '.#all'`.
+        all = pkgs.symlinkJoin {
+          name = "llvm-to-cairo-all";
+          paths = lib.attrValues llvmToCairo;
         };
 
         # We get your default shell to make sure things feel familiar in the dev shell.
@@ -57,16 +68,14 @@
           "getent passwd $USER | cut -d ':' -f7";
       in {
         packages = {
-          inherit llvmToCairo;
-          default = llvmToCairo;
-        };
+          inherit all;
+          default = llvmToCairo.ltc-cli;
+        } // llvmToCairo;
 
         # The default dev shell puts you in your native shell to make things feel happy.
         devShells.default = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
-          inputsFrom = [
-            llvmToCairo
-          ];
+          inputsFrom = lib.attrValues llvmToCairo;
 
           packages = [
             pkgs.nodejs_22
@@ -80,9 +89,7 @@
         # The dev shell for CI allows it to interpret commands properly.
         devShells.ci = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
-          inputsFrom = [
-            llvmToCairo
-          ];
+          inputsFrom = lib.attrValues llvmToCairo;
         };
       }
     );

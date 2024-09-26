@@ -14,7 +14,7 @@ pub mod llvm_compile;
 
 use thiserror::Error;
 
-/// The result type to be used at the boundaries of the library.
+/// The result type to be used at the boundaries of the project.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The root of the error hierarchy for this crate.
