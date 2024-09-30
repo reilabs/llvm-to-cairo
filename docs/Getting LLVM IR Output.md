@@ -8,9 +8,9 @@ this project.
 ## Rust
 
 `rustc` will emit LLVM IR when passed the `--emit=llvm-ir` flag, and LLVM bytecode when passed the
-`--emit=llvm-bc`. This will output `.ll` files into the `target` directory corresponding to your
-compiled file. For more information, see the
-[`rustc` developer guide](https://rustc-dev-guide.rust-lang.org/backend/debugging.html).
+`--emit=llvm-bc`. This will output `.ll` (or `.bc`) files into the `target` directory corresponding
+to your compiled file (usually in `build-type/deps/crate-name-hash.ll`). For more information, see
+the [`rustc` developer guide](https://rustc-dev-guide.rust-lang.org/backend/debugging.html).
 
 - This can be passed to the correct compiler when using cargo by calling
   `cargo rustc -- --emit=llvm-ir`.
