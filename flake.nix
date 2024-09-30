@@ -18,15 +18,22 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         # We grab our expected rust version from the Cargo.toml.
-        rustVersion = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.rust-version;
+        rustVersion = (lib.importTOML ./Cargo.toml).workspace.package.rust-version;
 
         # Then we set up our libraries for building this thing.
         pkgs = nixpkgs.legacyPackages.${system};
         inherit (pkgs) lib;
         fenixLib = fenix.packages.${system};
+        toolchainHash = "sha256-VZZnlyP69+Y3crrLHQyJirqlHrTtGTsyiSnZB8jEvVo=";
         fenixStable = fenixLib.fromToolchainName {
             name = rustVersion;
-            sha256 = "sha256-VZZnlyP69+Y3crrLHQyJirqlHrTtGTsyiSnZB8jEvVo=";
+            sha256 = toolchainHash;
+        };
+
+        # A target of the same version for our temporary "source" ABI
+        fenixAarch64 = fenixLib.targets.aarch64-unknown-none-softfloat.toolchainOf {
+          channel = rustVersion;
+          sha256 = toolchainHash;
         };
 
         # As we want nightly Rustfmt, we have to build a custom toolchain.
@@ -40,6 +47,7 @@
             "rust-std"
             "rustc"
           ])
+          fenixAarch64.rust-std
         ];
 
         # The crane library configures the Rust toolchain, along with the components we expect it
