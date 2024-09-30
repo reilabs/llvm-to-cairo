@@ -3,11 +3,13 @@
 # We want to be able to run commands from a nix shell using this package
 # definition.
 {
-  craneLib,
   lib,
-  llvmPackages_18,
-  libiconv,
   stdenv,
+  craneLib,
+  libffi,
+  libiconv,
+  libxml2,
+  llvmPackages_18,
 }:
  let
   workspaceToml = lib.importTOML ./Cargo.toml;
@@ -34,11 +36,13 @@
 
     # Things that are needed at build time on the system doing building.
     nativeBuildInputs = [
-     llvmPackages_18.llvm
+      llvmPackages_18.llvm
     ];
 
     # The things that we need available at build and runtime on the target system.
     buildInputs = [
+      libffi
+      libxml2
       llvmPackages_18.llvm
     ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
       libiconv

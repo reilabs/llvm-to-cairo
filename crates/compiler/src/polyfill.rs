@@ -10,7 +10,8 @@
 //! Our polyfill mechanism aims to be generic, such that we can implement and
 //! improve our polyfills without requiring invasive changes to the code-base.
 //! In order to do this, we have created a _library_ of polyfills that the
-//! compilation process (see [`crate::compiler`]) can select from dynamically.
+//! compilation process (see [`crate::compile::Compiler`]) can select from
+//! dynamically.
 //!
 //! # Polyfills and Optimization
 //!
@@ -50,3 +51,131 @@
 //! To that end, there are certainly polyfills that will still exist. It is very
 //! unlikely that every single operation is beneficial to implement as a builtin
 //! or AIR instruction.
+
+use bimap::{BiHashMap, BiMap};
+
+/// A bidirectional mapping from the builtin names for LLVM to the internal
+/// names for the corresponding polyfills.
+///
+/// This exists in order to enable external linkage of symbols not part of the
+/// current translation unit.
+///
+/// # LLVM Opcodes
+///
+/// Note that some LLVM opcodes (e.g. `add`) map to potentially multiple
+/// implementations. For such opcodes, the expected LLVM name is given by the
+/// [`Self::of_opcode`] function.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PolyfillMap {
+    /// A mapping from the LLVM-side names to the corresponding polyfill names.
+    mapping: BiHashMap<String, String>,
+}
+
+impl PolyfillMap {
+    /// Constructs a new polyfill map from the provided `mapping`.
+    #[must_use]
+    pub fn new(mapping: BiHashMap<String, String>) -> Self {
+        Self { mapping }
+    }
+
+    /// Queries for the polyfill name that corresponds to the provided
+    /// `llvm_name`, returning it if it exists or returning [`None`] otherwise.
+    pub fn polyfill(&self, llvm_name: impl Into<String>) -> Option<&String> {
+        self.mapping.get_by_left(&llvm_name.into())
+    }
+
+    /// Queries for the LLVM opcode (as modified by [`Self::of_opcode`]) that
+    /// corresponds to the provided `polyfill_name`, returning it if it exists
+    /// or returning [`None`] otherwise.
+    pub fn llvm(&self, polyfill_name: impl Into<String>) -> Option<&String> {
+        self.mapping.get_by_right(&polyfill_name.into())
+    }
+
+    /// Provides more information to assist in resolving the correct polyfill
+    /// based on the types associated with the particular opcode invocation.
+    ///
+    /// Note that this is a purely _syntactic_ transformation, and does not
+    /// account for type aliases and the like. Please ensure that any types are
+    /// fully resolved before calling this.
+    ///
+    /// ```
+    /// use ltc_compiler::polyfill::PolyfillMap;
+    ///
+    /// let opcode_name = "add";
+    /// let arg_types = vec!["i8", "i64"];
+    ///
+    /// assert_eq!(
+    ///     PolyfillMap::of_opcode(opcode_name, arg_types.as_slice()),
+    ///     "__llvm_add_i8_i64"
+    /// );
+    /// ```
+    #[must_use]
+    pub fn of_opcode(opcode: &str, types: &[&str]) -> String {
+        let types_str = if types.is_empty() {
+            "void".to_string()
+        } else {
+            types.join("_")
+        };
+        format!("__llvm_{opcode}_{types_str}")
+    }
+}
+
+impl Default for PolyfillMap {
+    /// Contains the default mapping from opcodes and builtins to the
+    /// corresponding polyfill names.
+    fn default() -> Self {
+        let mut map: BiMap<&str, &str> = BiMap::new();
+        map.insert(
+            "llvm.uadd.with.overflow.i64",
+            "__llvm_uadd_with_overflow_i64_i64",
+        );
+
+        Self::new(map.into_iter().map(|(l, r)| (l.to_string(), r.to_string())).collect())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::polyfill::PolyfillMap;
+
+    #[test]
+    fn llvm_lookup_works() {
+        let map = PolyfillMap::default();
+
+        assert_eq!(
+            map.llvm("__llvm_uadd_with_overflow_i64_i64").unwrap(),
+            "llvm.uadd.with.overflow.i64"
+        );
+    }
+
+    #[test]
+    fn polyfill_lookup_works() {
+        let map = PolyfillMap::default();
+
+        assert_eq!(
+            map.polyfill("llvm.uadd.with.overflow.i64").unwrap(),
+            "__llvm_uadd_with_overflow_i64_i64"
+        );
+    }
+
+    #[test]
+    fn of_opcode_works() {
+        let opcode_name = "my_opcode";
+        let tys_1 = vec!["i8", "i64"];
+        let tys_2 = vec!["i1"];
+        let tys_3 = vec![];
+
+        assert_eq!(
+            PolyfillMap::of_opcode(opcode_name, tys_1.as_slice()),
+            "__llvm_my_opcode_i8_i64"
+        );
+        assert_eq!(
+            PolyfillMap::of_opcode(opcode_name, tys_2.as_slice()),
+            "__llvm_my_opcode_i1"
+        );
+        assert_eq!(
+            PolyfillMap::of_opcode(opcode_name, tys_3.as_slice()),
+            "__llvm_my_opcode_void"
+        );
+    }
+}
