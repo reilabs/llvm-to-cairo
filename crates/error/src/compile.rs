@@ -5,8 +5,11 @@ use thiserror::Error;
 
 /// This error type is for use during the process of compilation from LLVM IR to
 /// the Cairo IR.
-#[derive(Clone, Debug, Error)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
     #[error("Miscellaneous compilation error: {_0}")]
     Miscellaneous(String),
 }

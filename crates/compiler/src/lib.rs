@@ -46,3 +46,14 @@
 
 pub mod compile;
 pub mod polyfill;
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn run() -> anyhow::Result<()> {
+        // let test_input = r"../input/add.li";
+        // let input_contents = MemoryBuffer::create_from_file(Path::new(test_input))?;
+
+        Ok(())
+    }
+}

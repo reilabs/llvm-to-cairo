@@ -50,5 +50,4 @@
 //! work far outweighs that downside. If we _do_ need any additional control, we
 //! can always modify this process at a later date.
 
-#[cfg(test)]
-mod test {}
+pub mod context;
