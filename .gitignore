@@ -3,6 +3,7 @@
 
 # Tooling
 .idea/
+.vscode/
 node_modules/
 result
 
