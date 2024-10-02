@@ -16,6 +16,7 @@ the [`rustc` developer guide](https://rustc-dev-guide.rust-lang.org/backend/debu
   `cargo rustc -- --emit=llvm-ir`.
 - You can also set the `RUSTC_FLAGS` environment variable before invoking cargo as normal:
   `RUSTFLAGS='--emit=llvm-ir'`.
+- You can see all possible LLVM flags with `cargo rustc -- -Cllvm-args="-help"`.
 
 There are some difficulties here with multiple-unit compilation that need to be figured out, but
 this is a reasonable starting point.
