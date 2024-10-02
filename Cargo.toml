@@ -39,6 +39,7 @@ cairo-lang-semantic = "2.8.2"
 cairo-lang-sierra-generator = "2.8.2"
 cairo-lang-utils = "2.8.2"
 clap = "4.5.16"
+inkwell = { version = "0.5.0", features = ["llvm18-0"] }
 itertools = "0.13.0"
 ltc-cli = { path = "crates/cli" }
 ltc-driver = { path = "crates/driver" }

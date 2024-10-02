@@ -50,4 +50,150 @@
 //! work far outweighs that downside. If we _do_ need any additional control, we
 //! can always modify this process at a later date.
 
-pub mod context;
+pub mod pass;
+pub mod source;
+
+use ltc_errors::compile::Result;
+
+use crate::{
+    compile::{
+        pass::{data::DynPassDataMap, PassManager, PassManagerReturnData},
+        source::SourceContext,
+    },
+    polyfill::PolyfillMap,
+};
+// TODO Build the pipeline as follows:
+//
+//   1. Do a linear scan through the top level entries to resolve all declared
+//      symbols, aliases, etc.
+//   2. Uses these as a consistency check and to gain additional info when
+//      actually compiling fns and bbs. In particular, we want to resolve
+//      signatures where possible.
+//   3. We want to do a consistency check during and after compilation, checking
+//      that things all make sense.
+//   4. We serialize the `FLIR` to the `.flo` file and we are done.
+
+// https://llvm.org/docs/LangRef.html
+
+/// The compiler is responsible for processing the LLVM IR input to generate a
+/// `FlatLowered` output.
+#[allow(dead_code)]
+pub struct Compiler {
+    /// The source context, containing references to the LLVM module to be
+    /// compiled.
+    context: SourceContext,
+
+    /// The passes that this compiler is configured to run.
+    passes: PassManager,
+
+    /// The mapping between LLVM names and polyfill names for the compiler to
+    /// use during compilation.
+    polyfill_map: PolyfillMap,
+}
+
+impl Compiler {
+    /// Constructs a new compiler instance, wrapping the provided `context`
+    /// describing the LLVM module to compile, the `passes` to run, and the
+    /// `polyfill_map` from LLVM names to polyfill names.
+    fn new(context: SourceContext, passes: PassManager, polyfill_map: PolyfillMap) -> Self {
+        Self {
+            context,
+            passes,
+            polyfill_map,
+        }
+    }
+
+    /// Executes the compiler on the configured LLVM module.
+    ///
+    /// Note that this invokes a state transition that leaves the compiler in an
+    /// invalid state, and hence it consumes the compiler to prevent API misuse.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error`] if the compilation process fails for any reason.
+    pub fn run(mut self) -> Result<CompilationResult> {
+        let PassManagerReturnData {
+            context: _context,
+            data,
+        } = self.passes.run(self.context)?;
+
+        // TODO Actually compile to FLIR.
+
+        Ok(CompilationResult::new(data))
+    }
+}
+
+/// The result of compiling an LLVM IR module.
+#[derive(Debug)]
+pub struct CompilationResult {
+    /// The final state of the pass data after the compiler passes have been
+    /// executed.
+    pub pass_results: DynPassDataMap,
+
+    /// The [`FLIR`] module that results from compilation.
+    pub result_module: (),
+}
+
+impl CompilationResult {
+    /// Constructs a new compilation result wrapping the final [`FLIR`] module
+    /// and also containing the final output of any compiler passes.
+    pub fn new(pass_results: DynPassDataMap) -> Self {
+        let result_module = ();
+        Self {
+            pass_results,
+            result_module,
+        }
+    }
+}
+
+/// Allows for building a [`Compiler`] instance while retaining the defaults for
+/// fields that do not need to be customized.
+pub struct CompilerBuilder {
+    /// The source context, containing references to the LLVM module to be
+    /// compiled.
+    context: SourceContext,
+
+    /// The passes that this compiler is configured to run.
+    passes: Option<PassManager>,
+
+    /// The mapping between LLVM names and polyfill names for the compiler to
+    /// use during compilation.
+    polyfill_map: Option<PolyfillMap>,
+}
+
+impl CompilerBuilder {
+    /// Creates a new compiler builder wrapping the provided context.
+    ///
+    /// The compiler's passes configuration and polyfill configuration will be
+    /// left as default.
+    pub fn new(context: SourceContext) -> Self {
+        let passes = None;
+        let polyfill_map = None;
+        Self {
+            context,
+            passes,
+            polyfill_map,
+        }
+    }
+
+    /// Specifies the pass configuration for the compiler.
+    pub fn with_passes(mut self, pass_manager: PassManager) -> Self {
+        self.passes = Some(pass_manager);
+        self
+    }
+
+    /// Specifies the polyfill configuration for the compiler.
+    pub fn with_polyfills(mut self, polyfill_map: PolyfillMap) -> Self {
+        self.polyfill_map = Some(polyfill_map);
+        self
+    }
+
+    /// Builds a compiler from the specified configuration.
+    pub fn build(self) -> Compiler {
+        Compiler::new(
+            self.context,
+            self.passes.unwrap_or_default(),
+            self.polyfill_map.unwrap_or_default(),
+        )
+    }
+}

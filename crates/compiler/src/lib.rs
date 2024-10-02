@@ -49,10 +49,19 @@ pub mod polyfill;
 
 #[cfg(test)]
 mod test {
+    use std::path::Path;
+
+    use crate::compile::{source::SourceContext, CompilerBuilder};
+
     #[test]
     fn run() -> anyhow::Result<()> {
-        // let test_input = r"../input/add.li";
-        // let input_contents = MemoryBuffer::create_from_file(Path::new(test_input))?;
+        let test_input = r"input/add.ll";
+        let mut ctx = SourceContext::create();
+        ctx.add_module(Path::new(test_input))?;
+
+        let compiler = CompilerBuilder::new(ctx).build();
+        let result = compiler.run()?;
+        assert_eq!(result.result_module, ());
 
         Ok(())
     }
