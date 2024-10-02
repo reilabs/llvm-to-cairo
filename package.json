@@ -8,11 +8,15 @@
   "lint-staged": {
     "(*.md|*.toml|*.json|*.yaml|*.yml|*.css|*.js|*.ts)": [
       "prettier --write"
+    ],
+    "*.rs": [
+      "rustfmt --unstable-features --edition 2021",
+      "clippy-driver"
     ]
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npx lint-staged && cargo clippy -- -D warnings"
+      "pre-commit": "npx lint-staged"
     }
   },
   "scripts": {

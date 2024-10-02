@@ -71,9 +71,9 @@
 
         # We get your default shell to make sure things feel familiar in the dev shell.
         getUserShellCommand = if pkgs.stdenv.hostPlatform.isDarwin then
-          "dscl . -read ~ UserShell | cut -d ' ' -f2"
+          "dscl . -read ~ UserShell | cut -d ' ' -f2 | tr -d '\n'"
         else
-          "getent passwd $USER | cut -d ':' -f7";
+          "getent passwd $USER | cut -d ':' -f7 | tr -d '\n'";
       in {
         packages = {
           inherit all;
@@ -98,6 +98,10 @@
         devShells.ci = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
           inputsFrom = lib.attrValues llvmToCairo;
+
+          packages = [
+            pkgs.nodejs_22
+          ];
         };
       }
     );
