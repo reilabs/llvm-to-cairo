@@ -5,15 +5,6 @@
     "prettier": "3.3.3",
     "prettier-plugin-toml": "2.0.1"
   },
-  "lint-staged": {
-    "(*.md|*.toml|*.json|*.yaml|*.yml|*.css|*.js|*.ts)": [
-      "prettier --write"
-    ],
-    "*.rs": [
-      "rustfmt --unstable-features --edition 2021",
-      "clippy-driver"
-    ]
-  },
   "husky": {
     "hooks": {
       "pre-commit": "npx lint-staged"
