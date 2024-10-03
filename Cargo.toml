@@ -7,6 +7,7 @@ members = [
   "crates/compiler",
   "crates/driver",
   "crates/error",
+  "crates/flir",
   "crates/rust-test-input",
 ]
 
@@ -42,6 +43,7 @@ itertools = "0.13.0"
 ltc-cli = { path = "crates/cli" }
 ltc-driver = { path = "crates/driver" }
 ltc-errors = { path = "crates/error" }
+ltc-flir = { path = "crates/flir" }
 thiserror = "1.0.63"
 tracing = "0.1.40"
 
