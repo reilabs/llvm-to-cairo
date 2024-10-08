@@ -4,12 +4,9 @@ This document describes the research done for the task #27 Design ALU. It aims t
 operations fall under the ALU umbrella, that are not already accounted for by the existing tasks to
 implement polyfills.
 
-The ALU will be implemented as a source code written in Cairo. During the
-[LLVM-to-Cairo compilation pipeline](https://www.notion.so/reilabs/System-Architecture-113d2f80c874802b8480d997347933a2?pvs=4)
-it will be translated to `FlatLowered` objects. Then, on the linking phase, arithmetic operations
-from `FLIR` objects created from the input LLVM IR will be linked with their Cairo implementations.
+This ALU will support only integers. Floating point numbers are out of scope of this document.
 
-## Interesting parts of LLVM IR
+## Research
 
 ALU will have to target two concepts: instructions and intrinsics.
 
@@ -162,25 +159,7 @@ br i1 %_3.1, label %panic, label %bb1, !dbg !17
 Based on this operation we decide to deliver the ALU os a collection of stateless arithmetic
 operations.
 
-## Naming convention
-
-As discussed with @Ara:
-
-### Instruction polyfills
-
-Name template: `__llvm_<opcode>_<ty1>_<ty2>`. In case the instruction works with both operands of
-the same data type, the template degrades to `__llvm_<opcode>_<ty>_<ty>`.
-
-In the above example of `add i32 %a, %b`, the polyfill would be named `__llvm_add_i32_i32`.
-
-### Intrinsic polyfills
-
-Name template: `__<actual name with _ instead of .>`.
-
-In the above example of `llvm.uadd.with.overflow.i64`, the polyfil would be named
-`__llvm_uadd_with_overflow_i64`.
-
-## Tests
+### Tests
 
 Cairo has an
 [integrated test framework](https://book.cairo-lang.org/ch10-01-how-to-write-tests.html), similar to
@@ -188,26 +167,65 @@ the one offered by Rust. Our ALU implementation will then come with a test suite
 implement the desired behavior, i.e. indicate overflow on some obvious situations like
 `0xFFFFFFFF + 1` for a U32 add.
 
-## Other observations
+## Design
 
-### Type conversion
+### Overview
 
-Cairo does not have Rust's `as` keyword, so it's not possible to do e.g. `let a = b as u32` given
-`b` is a U64.
+The ALU will be implemented as a source code written in
+[Cairo](https://book.cairo-lang.org/title-page.html). During the
+[LLVM-to-Cairo compilation pipeline](https://www.notion.so/reilabs/System-Architecture-113d2f80c874802b8480d997347933a2?pvs=4)
+it will be translated to `FlatLowered` objects. Then, on the linking phase, arithmetic operations
+from `FLIR` objects created from the input LLVM IR will be linked with their Cairo implementations.
 
-An equivalent operation in Cairo is `let a: u32: b.try_into().unwrap();`. This approach has two
-disadvantages:
+As discussed in the relevant section above, each operation will be an independent, stateless block
+of code composed of a single Cairo [function](https://book.cairo-lang.org/ch02-03-functions.html),
+which is an equivalent concept of a function in any other procedural programming language.
 
-- it will panic if `b`'s value is larger than `0xFFFFFFFF`,
-- there's no free wraparound as in the case of `as`.
+Each function will follow the semantics of its LLVM IR counterpart. This requires:
 
-We will need to have to handle the type conversion with pattern matching:
+- accepting the same number of arguments, of the same type and in the same order as the original
+  operation's operands,
+- returning the same number or values, of the same type and in the same order as the original
+  operation.
 
-```rust
-    let result: u32 = match sum.try_into() {
-        Ok(val) => val,
-        Err(_) => {
-                  // Handle the wraparound manually
-        }
-    };
-```
+Each function will follow the naming scheme described in the relevant section below.
+
+### Naming convention
+
+As discussed with @Ara:
+
+#### Instruction polyfills
+
+Name template: `__llvm_<opcode>_<ty1>_<ty2>`. In case the instruction works with both operands of
+the same data type, the template degrades to `__llvm_<opcode>_<ty>_<ty>`.
+
+In the above example of `add i32 %a, %b`, the polyfill would be named `__llvm_add_i32_i32`.
+
+#### Intrinsic polyfills
+
+Name template: `__<actual name with _ instead of .>`.
+
+In the above example of `llvm.uadd.with.overflow.i64`, the polyfil would be named
+`__llvm_uadd_with_overflow_i64`.
+
+### Operations
+
+#### Based on instructions
+
+- `add`
+- `sub`
+- `mul`
+- `udiv`
+- `sdiv`
+- `urem`
+- `srem`
+- `shl`
+- `lshr`
+- `ashr`
+- `and`
+- `or`
+- `xor`
+
+#### Based on intrinsics
+
+TODO
