@@ -72,7 +72,66 @@ in LLVM and does not make its way into the `.ll` file produced out of the
 Luckily, Langref has an extensive list of them. Here's the example of
 [`llvm.uadd.with.overflow.<ty>`](https://llvm.org/docs/LangRef.html#llvm-uadd-with-overflow-intrinsics).
 
-## Statefulness
+### Data types
+
+#### Integers
+
+LLVM IR supports integers of arbitrary width. A general syntax for an integer type is `iN`, where
+`N` can be anything from 1 to 2^32.
+
+The Cairo VM internally operates on 252-bit-long field elements - `felt252`. On the higher level of
+abstraction the Cairo language supports
+[integers of specific lengths](https://book.cairo-lang.org/ch02-02-data-types.html): 8 bit, 16 bit,
+32 bit, 64 bit, 128 bit and 256 bit.
+
+[Rust supports integers of width from 8 to 128 bit](https://doc.rust-lang.org/book/ch03-02-data-types.html)
+with the same increment Cairo does, plus architecture-dependent `isize` and `usize`.
+
+The Cairo VM does not have a classical registers of length constrained by the hardware. Therefore
+there is no obvious indicator of how long `usize`/`isize` should be on that target. Since from the
+LLVM point of view a pointer must have a finite size, this decision must be made based on some other
+feature of the architecture. Since the architecture's natural word size is 252 bit, being the length
+of the field element, it may be a reasonable decision to set `usize`/`isize` length to 252 bit.
+However, since the Cairo language does not support 252 bit integers, we propose to set
+`usize`/`isize` length to 256 bit, which a value supported by both Rust (via the arch-dependent
+types), LLVM (via the arbitrarily long integers support) and by the Cairo language (via
+`u256`/`i256` types). An alternative approach is following the Cairo language and using 32 bit
+`usize`/`isize`.
+
+Summing up, we expect to see in the IR integers of lengths ranging from 8 to 128 bit and possibly
+256 bit if we decide to use 256-bit-long `usize`/`isize`.
+
+#### Vectors
+
+Neither Cairo VM, the Cairo language nor no-std Rust have support for vector operations.
+
+If Cairo target definition supplied to `rustc` will not suggest existence of vector extension on the
+target platform, we do not expect any vector intrinsics to appear in the IR. Therefore, vector
+support is not planned in the initial phase of the project.
+
+#### Type conversion
+
+Cairo does not have Rust's `as` keyword, so it's not possible to do e.g. `let a = b as u32` given
+`b` is a U64.
+
+An equivalent operation in Cairo is `let a: u32: b.try_into().unwrap();`. This approach has two
+disadvantages:
+
+- it will panic if `b`'s value is larger than `0xFFFFFFFF`,
+- there's no free wraparound as in the case of `as`.
+
+We will need to have to handle the type conversion with pattern matching:
+
+```rust
+    let result: u32 = match sum.try_into() {
+        Ok(val) => val,
+        Err(_) => {
+                  // Handle the wraparound manually
+        }
+    };
+```
+
+### Statefulness
 
 A real Arithmetic-Logic Unit in a CPU is a finite state machine. Some states, interesting from the
 programmer's point of view, can be captured as contents of the CPU registers. Such state is e.g. the
@@ -82,8 +141,8 @@ a flag register, where specific bits signal certain conditions (e.g. the result 
 integer overflow).
 
 The LLVM-to-Cairo infrastructure needs to deliver pieces of code translating generic LLVM arithmetic
-operations to their counterparts specific to the CairoVM architecture. This translation will be done
-on the code level, during one of the LLVM-to-Cairo pipeline stages. Namely, this will be not
+operations to their counterparts specific to the Cairo VM architecture. This translation will be
+done on the code level, during one of the LLVM-to-Cairo pipeline stages. Namely, this will be not
 _runtime_ translation, but rather a _compilation time_ one. Therefore, there is no global _state_ to
 manage during that time.
 
