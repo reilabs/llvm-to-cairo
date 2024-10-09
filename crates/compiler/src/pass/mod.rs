@@ -44,7 +44,7 @@ use derivative::Derivative;
 use downcast_rs::Downcast;
 use ltc_errors::compile::{Error, Result};
 
-use crate::compile::{
+use crate::{
     pass::data::{ConcretePassData, DynPassDataMap, PassData},
     source::SourceContext,
 };
@@ -123,6 +123,16 @@ pub type DynamicPassReturnData = PassReturnData<PassData>;
 ///
 /// The implementation is designed te be used via dynamic dispatch, and hence
 /// can provide the requisite operations however it is able.
+///
+/// # Recommended Functions
+///
+/// On the concrete type that implements this trait, we recommend implementing:
+///
+/// - An appropriate `new(...) -> Self` associated function.
+/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
+///   can usually simply call `Box::new(Self::new(...))`.
+///
+/// These aid in providing a uniform way to construct pass data.
 ///
 /// # Self Bounds
 ///
@@ -220,6 +230,16 @@ impl dyn PassOps {
 
 /// Provides extra operations that can be called when operating on a concrete
 /// instance of a specific pass, rather than on any instance of a pass.
+///
+/// # Recommended Functions
+///
+/// On the concrete type that implements this trait, we recommend implementing:
+///
+/// - An appropriate `new(...) -> Self` associated function.
+/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
+///   can usually simply call `Box::new(Self::new(...))`.
+///
+/// These aid in providing a uniform way to construct pass data.
 pub trait ConcretePass
 where
     Self: Clone + Debug + PassOps,
@@ -315,7 +335,12 @@ impl PassManager {
     ///   generated from the provided `passes`. This will usually occur due to
     ///   circular dependencies between passes.
     pub fn generate_pass_ordering(passes: Vec<Pass>) -> Result<Vec<Pass>> {
-        // TODO Actually implement this (#56). The current constraint is silly.
+        // TODO Actually implement this (#56). The current constraint is silly for the
+        // future but sane for now as we only have the one pass.
+        //
+        // In future it should actually construct a topological ordering of passes based
+        // on their declared dependencies and invalidations, only returning an error if
+        // there is an unbreakable topological cycle.
         let no_deps = passes.iter().all(|p| p.depends().is_empty());
         if no_deps {
             Ok(passes)
@@ -337,9 +362,9 @@ impl Default for PassManager {
     /// assembled into a correct ordering, and will not necessarily be executed
     /// in the order in which they are presented here.
     ///
-    /// - [`analysis::module_map::ModuleMap`]
+    /// - [`analysis::module_map::BuildModuleMap`]
     fn default() -> Self {
-        Self::new(vec![analysis::module_map::ModuleMap::new()])
+        Self::new(vec![analysis::module_map::BuildModuleMap::new_dyn()])
             .expect("Default pass ordering was invalid")
     }
 }

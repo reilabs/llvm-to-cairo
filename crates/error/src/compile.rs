@@ -1,6 +1,8 @@
 //! Error types and utilities to do with the compilation from LLVM IR to Cairo
 //! IR.
 
+use std::str::Utf8Error;
+
 use inkwell::support::LLVMString;
 use thiserror::Error;
 
@@ -11,9 +13,18 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// the Cairo IR.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// An error that occurs when trying to convert from the LLVM string
+    /// representation used by Inkwell to the UTF-8 string representation used
+    /// by Rust.
+    #[error("Could not create Rust string from C string: {_0}")]
+    CStrConversionError(#[from] Utf8Error),
+
+    #[error("`{_0}` with invalid segment `{_1}` could not be parsed as an LLVM data layout")]
+    InvalidDataLayoutSpecification(String, String),
+
     /// Emitted when code tries to construct an invalid ordering of compiler
     /// passes.
-    #[error("Pass ordering was invalid: {_0}")]
+    #[error("Invalid Pass Ordering: {_0}")]
     InvalidPassOrdering(String),
 
     /// An error when doing IO during compilation.
@@ -31,6 +42,16 @@ pub enum Error {
     /// context, but cannot do soe compilation context, but cannot do so.
     #[error("Unable to add module to context: {_0}")]
     UnableToAddModuleToContext(String),
+
+    #[error("We only support targets that use a single address space numbered 0")]
+    UnsupportedAdditionalAddressSpaces,
+
+    #[error("We do not support targets with non-integral pointers configured.")]
+    UnsupportedNonIntegralPointerConfiguration,
+
+    /// Emitted when we encounter an LLVM type that we do not support.
+    #[error("The LLVM basic type {_0} is not supported")]
+    UnsupportedType(String),
 }
 
 impl From<LLVMString> for Error {

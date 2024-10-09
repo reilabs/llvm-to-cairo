@@ -10,7 +10,7 @@ use std::{
 use derivative::Derivative;
 use downcast_rs::Downcast;
 
-use crate::compile::pass::{ConcretePass, Pass, PassKey};
+use crate::pass::{ConcretePass, Pass, PassKey};
 
 /// Pass data is output by any given pass
 pub type PassData = Box<dyn PassDataOps>;
@@ -19,6 +19,16 @@ pub type PassData = Box<dyn PassDataOps>;
 ///
 /// The implementation is designed to be used via dynamic dispatch, and hence
 /// can provide the requisite operations however it is able.
+///
+/// # Recommended Functions
+///
+/// On the concrete type that implements this trait, we recommend implementing:
+///
+/// - An appropriate `new(...) -> Self` associated function.
+/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
+///   can usually simply call `Box::new(Self::new(...))`.
+///
+/// These aid in providing a uniform way to construct pass data.
 ///
 /// # Self Bounds
 ///
@@ -85,6 +95,16 @@ impl dyn PassDataOps {
 
 /// Provides additional operations that can be called when operating on a
 /// concrete instance of a specific pass, rather than any pass instance.
+///
+/// # Recommended Functions
+///
+/// On the concrete type that implements this trait, we recommend implementing:
+///
+/// - An appropriate `new(...) -> Self` associated function.
+/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
+///   can usually simply call `Box::new(Self::new(...))`.
+///
+/// These aid in providing a uniform way to construct pass data.
 pub trait ConcretePassData
 where
     Self: Clone + Debug + PassDataOps,
