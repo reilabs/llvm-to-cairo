@@ -44,7 +44,7 @@ use derivative::Derivative;
 use downcast_rs::Downcast;
 use ltc_errors::compile::{Error, Result};
 
-use crate::compile::{
+use crate::{
     pass::data::{ConcretePassData, DynPassDataMap, PassData},
     source::SourceContext,
 };
@@ -121,6 +121,13 @@ pub type DynamicPassReturnData = PassReturnData<PassData>;
 ///
 /// The implementation is designed te be used via dynamic dispatch, and hence
 /// can provide the requisite operations however it is able.
+///
+/// # Recommended Functions
+///
+/// On the concrete implementor of this trait we recommend implementing an
+/// appropriate `new(...) -> Self` associated function, as well as a
+/// `new_dyn(...) -> Pass` associated function. This aids construction of
+/// passes.
 ///
 /// # Self Bounds
 ///
@@ -218,6 +225,13 @@ impl dyn PassOps {
 
 /// Provides extra operations that can be called when operating on a concrete
 /// instance of a specific pass, rather than on any instance of a pass.
+///
+/// # Recommended Functions
+///
+/// On the concrete implementor of this trait we recommend implementing an
+/// appropriate `new(...) -> Self` associated function, as well as a
+/// `new_dyn(...) -> Pass` associated function. This aids construction of
+/// passes.
 pub trait ConcretePass
 where
     Self: Clone + Debug + PassOps,
@@ -332,9 +346,9 @@ impl Default for PassManager {
     /// assembled into a correct ordering, and will not necessarily be executed
     /// in the order in which they are presented here.
     ///
-    /// - [`crate::pass::analysis::module_map::ModuleMap`]
+    /// - [`crate::pass::analysis::module_map::BuildModuleMap`]
     fn default() -> Self {
-        Self::new(vec![analysis::module_map::ModuleMap::new()])
+        Self::new(vec![analysis::module_map::BuildModuleMap::new_dyn()])
             .expect("Default pass ordering was invalid")
     }
 }
