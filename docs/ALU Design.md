@@ -87,16 +87,23 @@ with the same increment Cairo does, plus architecture-dependent `isize` and `usi
 The Cairo VM does not have a classical registers of length constrained by the hardware. Therefore
 there is no obvious indicator of how long `usize`/`isize` should be on that target. Since from the
 LLVM point of view a pointer must have a finite size, this decision must be made based on some other
-feature of the architecture. Since the architecture's natural word size is 252 bit, being the length
-of the field element, it may be a reasonable decision to set `usize`/`isize` length to 252 bit.
-However, since the Cairo language does not support 252 bit integers, we propose to set
-`usize`/`isize` length to 256 bit, which a value supported by both Rust (via the arch-dependent
-types), LLVM (via the arbitrarily long integers support) and by the Cairo language (via
-`u256`/`i256` types). An alternative approach is following the Cairo language and using 32 bit
-`usize`/`isize`.
+feature of the architecture. There are a few possibilities we've evaluated:
 
-Summing up, we expect to see in the IR integers of lengths ranging from 8 to 128 bit and possibly
-256 bit if we decide to use 256-bit-long `usize`/`isize`.
+- The Cairo language already has 32 bit `usize`, so we can follow this approach,
+- The architecture's natural word size is 252 bit, being the length of the field element, it may be
+  reasonable to set `usize`/`isize` length to 252 bit,
+- 256 bit, which is the next power-of-2 after 252. This approach leaves 4 extra bits that may be
+  used to keep some metadata.
+
+Ultimately the size of `usize` and `isize` has been decided to be 64 bits, which is neither of the
+above proposition. This length is a consequence of using the `aarch64-unknown-none-softfloat` target
+triple. The choice of the triple determines the length of the pointer which in turn determines the
+length of `usize`. This target triple is a temporary choice before a custom target triple is
+proposed. It has been chosen for its soft float support and no host operating system. The pointer
+length is just one of its parameters we accept on this stage of the project.
+
+Summing up, we expect to see in the IR integers of the following lengths: 8, 16, 32, 64 and 128
+bits.
 
 #### Vectors
 
