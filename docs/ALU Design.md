@@ -230,21 +230,227 @@ In the above example of `llvm.uadd.with.overflow.i64`, the polyfill would be nam
 
 ### Operations
 
+The list below specifies all implementations of arithmetic operations that will be provided by ALU.
+The list is divided to implementations emulating LLVM instructions and implementations emulating
+LLVM intrinsics. Implementations for every supported integer lengths are specified. Their names
+follow the naming convention explained in the above section. Each instruction or intrinsic name is a
+link to the relevant part of the LLVM language reference.
+
 #### Based on instructions
 
-- `add`
-- `sub`
-- `mul`
-- `udiv`
-- `sdiv`
-- `urem`
-- `srem`
-- `shl`
-- `lshr`
-- `ashr`
-- `and`
-- `or`
-- `xor`
+- [`add`](https://llvm.org/docs/LangRef.html#add-instruction):
+  - `__llvm_add_i8_i8 -> i8`
+  - `__llvm_add_u8_u8 -> u8`
+  - `__llvm_add_i16_i16 -> i16`
+  - `__llvm_add_u16_u16 -> u16`
+  - `__llvm_add_i32_i32 -> i32`
+  - `__llvm_add_u32_u32 -> u32`
+  - `__llvm_add_i64_i64 -> i64`
+  - `__llvm_add_u64_u64 -> u64`
+  - `__llvm_add_i128_i128 -> i128`
+  - `__llvm_add_u128_u128 -> u128`
+- [`sub`](https://llvm.org/docs/LangRef.html#sub-instruction):
+  - `__llvm_sub_i8_i8 -> i8`
+  - `__llvm_sub_u8_u8 -> u8`
+  - `__llvm_sub_i16_i16 -> i16`
+  - `__llvm_sub_u16_u16 -> u16`
+  - `__llvm_sub_i32_i32 -> i32`
+  - `__llvm_sub_u32_u32 -> u32`
+  - `__llvm_sub_i64_i64 -> i64`
+  - `__llvm_sub_u64_u64 -> u64`
+  - `__llvm_sub_i128_i128 -> i128`
+  - `__llvm_sub_u128_u128 -> u128`
+- [`mul`](https://llvm.org/docs/LangRef.html#mul-instruction):
+  - `__llvm_mul_i8_i8 -> i8`
+  - `__llvm_mul_u8_u8 -> u8`
+  - `__llvm_mul_i16_i16 -> i16`
+  - `__llvm_mul_u16_u16 -> u16`
+  - `__llvm_mul_i32_i32 -> i32`
+  - `__llvm_mul_u32_u32 -> u32`
+  - `__llvm_mul_i64_i64 -> i64`
+  - `__llvm_mul_u64_u64 -> u64`
+  - `__llvm_mul_i128_i128 -> i128`
+  - `__llvm_mul_u128_u128 -> u128`
+- [`udiv`](https://llvm.org/docs/LangRef.html#udiv-instruction):
+  - `__llvm_udiv_i8_i8 -> i8`
+  - `__llvm_udiv_u8_u8 -> u8`
+  - `__llvm_udiv_i16_i16 -> i16`
+  - `__llvm_udiv_u16_u16 -> u16`
+  - `__llvm_udiv_i32_i32 -> i32`
+  - `__llvm_udiv_u32_u32 -> u32`
+  - `__llvm_udiv_i64_i64 -> i64`
+  - `__llvm_udiv_u64_u64 -> u64`
+  - `__llvm_udiv_i128_i128 -> i128`
+  - `__llvm_udiv_u128_u128 -> u128`
+- [`sdiv`](https://llvm.org/docs/LangRef.html#sdiv-instruction):
+  - `__llvm_sdiv_i8_i8 -> i8`
+  - `__llvm_sdiv_u8_u8 -> u8`
+  - `__llvm_sdiv_i16_i16 -> i16`
+  - `__llvm_sdiv_u16_u16 -> u16`
+  - `__llvm_sdiv_i32_i32 -> i32`
+  - `__llvm_sdiv_u32_u32 -> u32`
+  - `__llvm_sdiv_i64_i64 -> i64`
+  - `__llvm_sdiv_u64_u64 -> u64`
+  - `__llvm_sdiv_i128_i128 -> i128`
+  - `__llvm_sdiv_u128_u128 -> u128`
+- [`urem`](https://llvm.org/docs/LangRef.html#urem-instruction):
+  - `__llvm_urem_i8_i8 -> i8`
+  - `__llvm_urem_u8_u8 -> u8`
+  - `__llvm_urem_i16_i16 -> i16`
+  - `__llvm_urem_u16_u16 -> u16`
+  - `__llvm_urem_i32_i32 -> i32`
+  - `__llvm_urem_u32_u32 -> u32`
+  - `__llvm_urem_i64_i64 -> i64`
+  - `__llvm_urem_u64_u64 -> u64`
+  - `__llvm_urem_i128_i128 -> i128`
+  - `__llvm_urem_u128_u128 -> u128`
+- [`srem`](https://llvm.org/docs/LangRef.html#srem-instruction):
+  - `__llvm_srem_i8_i8 -> i8`
+  - `__llvm_srem_u8_u8 -> u8`
+  - `__llvm_srem_i16_i16 -> i16`
+  - `__llvm_srem_u16_u16 -> u16`
+  - `__llvm_srem_i32_i32 -> i32`
+  - `__llvm_srem_u32_u32 -> u32`
+  - `__llvm_srem_i64_i64 -> i64`
+  - `__llvm_srem_u64_u64 -> u64`
+  - `__llvm_srem_i128_i128 -> i128`
+  - `__llvm_srem_u128_u128 -> u128`
+- [`shl`](https://llvm.org/docs/LangRef.html#shl-instruction):
+  - `__llvm_shl_i8_i8 -> i8`
+  - `__llvm_shl_u8_u8 -> u8`
+  - `__llvm_shl_i16_i16 -> i16`
+  - `__llvm_shl_u16_u16 -> u16`
+  - `__llvm_shl_i32_i32 -> i32`
+  - `__llvm_shl_u32_u32 -> u32`
+  - `__llvm_shl_i64_i64 -> i64`
+  - `__llvm_shl_u64_u64 -> u64`
+  - `__llvm_shl_i128_i128 -> i128`
+  - `__llvm_shl_u128_u128 -> u128`
+- [`lshr`](https://llvm.org/docs/LangRef.html#lshr-instruction):
+  - `__llvm_lshr_i8_i8 -> i8`
+  - `__llvm_lshr_u8_u8 -> u8`
+  - `__llvm_lshr_i16_i16 -> i16`
+  - `__llvm_lshr_u16_u16 -> u16`
+  - `__llvm_lshr_i32_i32 -> i32`
+  - `__llvm_lshr_u32_u32 -> u32`
+  - `__llvm_lshr_i64_i64 -> i64`
+  - `__llvm_lshr_u64_u64 -> u64`
+  - `__llvm_lshr_i128_i128 -> i128`
+  - `__llvm_lshr_u128_u128 -> u128`
+- [`ashr`](https://llvm.org/docs/LangRef.html#ashr-instruction):
+  - `__llvm_ashr_i8_i8 -> i8`
+  - `__llvm_ashr_u8_u8 -> u8`
+  - `__llvm_ashr_i16_i16 -> i16`
+  - `__llvm_ashr_u16_u16 -> u16`
+  - `__llvm_ashr_i32_i32 -> i32`
+  - `__llvm_ashr_u32_u32 -> u32`
+  - `__llvm_ashr_i64_i64 -> i64`
+  - `__llvm_ashr_u64_u64 -> u64`
+  - `__llvm_ashr_i128_i128 -> i128`
+  - `__llvm_ashr_u128_u128 -> u128`
+- [`and`](https://llvm.org/docs/LangRef.html#and-instruction):
+  - `__llvm_and_i8_i8 -> i8`
+  - `__llvm_and_u8_u8 -> u8`
+  - `__llvm_and_i16_i16 -> i16`
+  - `__llvm_and_u16_u16 -> u16`
+  - `__llvm_and_i32_i32 -> i32`
+  - `__llvm_and_u32_u32 -> u32`
+  - `__llvm_and_i64_i64 -> i64`
+  - `__llvm_and_u64_u64 -> u64`
+  - `__llvm_and_i128_i128 -> i128`
+  - `__llvm_and_u128_u128 -> u128`
+- [`or`](https://llvm.org/docs/LangRef.html#or-instruction):
+  - `__llvm_or_i8_i8 -> i8`
+  - `__llvm_or_u8_u8 -> u8`
+  - `__llvm_or_i16_i16 -> i16`
+  - `__llvm_or_u16_u16 -> u16`
+  - `__llvm_or_i32_i32 -> i32`
+  - `__llvm_or_u32_u32 -> u32`
+  - `__llvm_or_i64_i64 -> i64`
+  - `__llvm_or_u64_u64 -> u64`
+  - `__llvm_or_i128_i128 -> i128`
+  - `__llvm_or_u128_u128 -> u128`
+- [`xor`](https://llvm.org/docs/LangRef.html#xor-instruction):
+  - `__llvm_xor_i8_i8 -> i8`
+  - `__llvm_xor_u8_u8 -> u8`
+  - `__llvm_xor_i16_i16 -> i16`
+  - `__llvm_xor_u16_u16 -> u16`
+  - `__llvm_xor_i32_i32 -> i32`
+  - `__llvm_xor_u32_u32 -> u32`
+  - `__llvm_xor_i64_i64 -> i64`
+  - `__llvm_xor_u64_u64 -> u64`
+  - `__llvm_xor_i128_i128 -> i128`
+  - `__llvm_xor_u128_u128 -> u128`
+- [`cmpxchg`](https://llvm.org/docs/LangRef.html#cmpxchg-instruction):
+  - Unlike the previous instructions, `cmpxchg` accepts three arguments. Some of the arguments can
+    be integers or pointers. Pointer arguments have the `p` prefix, e.g. `pu8` is a pointer to
+    `uint8`.
+  - Unlike the previous instructions, `cmpxchg` returns a tuple: the first value is the original
+    value at the memory location pointed to by the first argument (before exchange) and the second
+    value indicates if the value loaded equals the value of the second argument.
+  - `__llvm_cmpxchg_pi8_i8_i8 -> (i8, bool)`
+  - `__llvm_cmpxchg_pi8_pi8_pi8 -> (i8, bool)`
+  - `__llvm_cmpxchg_pu8_u8_u8 -> (u8, bool)`
+  - `__llvm_cmpxchg_pu8_pu8_pu8 -> (u8, bool)`
+  - `__llvm_cmpxchg_pi16_i16_i16 -> (i16, bool)`
+  - `__llvm_cmpxchg_pi16_pi16_pi16 -> (i16, bool)`
+  - `__llvm_cmpxchg_pu16_u16_u16 -> (u16, bool)`
+  - `__llvm_cmpxchg_pu16_pu16_pu16 -> (u16, bool)`
+  - `__llvm_cmpxchg_pi32_i32_i32 -> (i32, bool)`
+  - `__llvm_cmpxchg_pi32_pi32_pi32 -> (i32, bool)`
+  - `__llvm_cmpxchg_pu32_u32_u32 -> (u32, bool)`
+  - `__llvm_cmpxchg_pu32_pu32_pu32 -> (u32, bool)`
+  - `__llvm_cmpxchg_pi64_i64_i64 -> (i64, bool)`
+  - `__llvm_cmpxchg_pi64_pi64_pi64 -> (i64, bool)`
+  - `__llvm_cmpxchg_pu64_u64_u64 -> (u64, bool)`
+  - `__llvm_cmpxchg_pu64_pu64_pu64 -> (u64, bool)`
+  - `__llvm_cmpxchg_pi128_i128_i128 -> (i128, bool)`
+  - `__llvm_cmpxchg_pi128_pi128_pi128 -> (i128, bool)`
+  - `__llvm_cmpxchg_pui28_u128_u128 -> (u128, bool)`
+  - `__llvm_cmpxchg_pui28_pu128_pu128 -> (u128, bool)`
+- [`trunc .. to`](https://llvm.org/docs/LangRef.html#trunc-to-instruction):
+  - `__llvm_trunc_u128_to_u64 -> u64`
+  - `__llvm_trunc_u128_to_u32 -> u32`
+  - `__llvm_trunc_u128_to_u16 -> u16`
+  - `__llvm_trunc_u128_to_u8 -> u8`
+  - `__llvm_trunc_u128_to_i64 -> i64`
+  - `__llvm_trunc_u128_to_i32 -> i32`
+  - `__llvm_trunc_u128_to_ui6 -> i16`
+  - `__llvm_trunc_u128_to_i8 -> i8`
+  - `__llvm_trunc_i128_to_i64 -> i64`
+  - `__llvm_trunc_i128_to_i32 -> i32`
+  - `__llvm_trunc_i128_to_i16 -> i16`
+  - `__llvm_trunc_i128_to_i8 -> i8`
+  - `__llvm_trunc_i128_to_u64 -> u64`
+  - `__llvm_trunc_i128_to_u32 -> u32`
+  - `__llvm_trunc_i128_to_u16 -> u16`
+  - `__llvm_trunc_i128_to_u8 -> u8`
+  - `__llvm_trunc_u64_to_u32 -> u32`
+  - `__llvm_trunc_u64_to_u16 -> u16`
+  - `__llvm_trunc_u64_to_u8 -> u8`
+  - `__llvm_trunc_u64_to_i32 -> i32`
+  - `__llvm_trunc_u64_to_ui6 -> i16`
+  - `__llvm_trunc_u64_to_i8 -> i8`
+  - `__llvm_trunc_i64_to_i32 -> i32`
+  - `__llvm_trunc_i64_to_i16 -> i16`
+  - `__llvm_trunc_i64_to_i8 -> i8`
+  - `__llvm_trunc_i64_to_u32 -> u32`
+  - `__llvm_trunc_i64_to_u16 -> u16`
+  - `__llvm_trunc_i64_to_u8 -> u8`
+  - `__llvm_trunc_u32_to_u16 -> u16`
+  - `__llvm_trunc_u32_to_u8 -> u8`
+  - `__llvm_trunc_u32_to_ui6 -> i16`
+  - `__llvm_trunc_u32_to_i8 -> i8`
+  - `__llvm_trunc_i32_to_i16 -> i16`
+  - `__llvm_trunc_i32_to_i8 -> i8`
+  - `__llvm_trunc_i32_to_u16 -> u16`
+  - `__llvm_trunc_i32_to_u8 -> u8`
+  - `__llvm_trunc_u16_to_u8 -> u8`
+  - `__llvm_trunc_u16_to_i8 -> i8`
+  - `__llvm_trunc_i16_to_i8 -> i8`
+  - `__llvm_trunc_i16_to_u8 -> u8`
+- [`zext .. to`](https://llvm.org/docs/LangRef.html#zext-to-instruction):
+- [`sext .. to`](https://llvm.org/docs/LangRef.html#sext-to-instruction):
 
 #### Based on intrinsics
 
