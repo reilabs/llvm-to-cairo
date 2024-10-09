@@ -58,7 +58,7 @@ initial version of ALU will not handle `nuw` and `nsw` keywords in any specific 
 The example by @Ara above includes the following line:
 
 ```llvm
- %0 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %left, i64 %right), !dbg !17
+%0 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %left, i64 %right), !dbg !17
 ```
 
 There is no `add` instruction here. The adding operation is done by an intrinsic named
@@ -127,12 +127,12 @@ disadvantages:
 We will need to have to handle the type conversion with pattern matching:
 
 ```rust
-    let result: u32 = match sum.try_into() {
-        Ok(val) => val,
-        Err(_) => {
-                  // Handle the wraparound manually
-        }
-    };
+let result: u32 = match sum.try_into() {
+  Ok(val) => val,
+  Err(_) => {
+    // Handle the wraparound manually
+  }
+};
 ```
 
 ### Statefulness
