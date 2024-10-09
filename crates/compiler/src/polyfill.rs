@@ -10,8 +10,7 @@
 //! Our polyfill mechanism aims to be generic, such that we can implement and
 //! improve our polyfills without requiring invasive changes to the code-base.
 //! In order to do this, we have created a _library_ of polyfills that the
-//! compilation process (see [`crate::compile::Compiler`]) can select from
-//! dynamically.
+//! compilation process (see [`crate::Compiler`]) can select from dynamically.
 //!
 //! # Polyfills and Optimization
 //!

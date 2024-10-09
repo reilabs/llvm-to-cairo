@@ -15,6 +15,7 @@ rust-version.workspace = true
 
 [dependencies]
 bimap = "0.6.3"
+chumsky = "0.9.3"
 clap.workspace = true
 derivative = "2.2.0"
 downcast-rs = "1.2.1"
