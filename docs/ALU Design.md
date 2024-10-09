@@ -109,6 +109,8 @@ bits.
 
 Neither Cairo VM, the Cairo language nor no-std Rust have support for vector operations.
 
+LLVM IR has vectors as first class citizens. However,
+_[vector types are used where multiple primitive data are operated in parallel using a single instruction (SIMD)](https://llvm.org/docs/LangRef.html#t-vector)_.
 If Cairo target definition supplied to `rustc` will not suggest existence of vector extension on the
 target platform, we do not expect any vector intrinsics to appear in the IR. Therefore, vector
 support is not planned in the initial phase of the project.
