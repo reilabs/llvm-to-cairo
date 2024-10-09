@@ -74,15 +74,17 @@ Luckily, Langref has an extensive list of them. Here's the example of
 #### Integers
 
 LLVM IR supports integers of arbitrary width. A general syntax for an integer type is `iN`, where
-`N` can be anything from 1 to 2^32.
+`N` can be anything from 1 to 2^32. Similarly, the syntax of `uN` is used for unsigned integers.
+Since LLVM does not have a dedicated type for boolean values, `i1` is used instead.
 
 The Cairo VM internally operates on 252-bit-long field elements - `felt252`. On the higher level of
 abstraction the Cairo language supports
 [integers of specific lengths](https://book.cairo-lang.org/ch02-02-data-types.html): 8 bit, 16 bit,
-32 bit, 64 bit, 128 bit and 256 bit.
+32 bit, 64 bit, 128 bit and 256 bit. Cairo also supports booleans.
 
 [Rust supports integers of width from 8 to 128 bit](https://doc.rust-lang.org/book/ch03-02-data-types.html)
-with the same increment Cairo does, plus architecture-dependent `isize` and `usize`.
+with the same increment Cairo does, plus architecture-dependent `isize` and `usize`. Rust also
+supports booleans.
 
 The Cairo VM does not have a classical registers of length constrained by the hardware. Therefore
 there is no obvious indicator of how long `usize`/`isize` should be on that target. Since from the
@@ -102,7 +104,7 @@ length of `usize`. This target triple is a temporary choice before a custom targ
 proposed. It has been chosen for its soft float support and no host operating system. The pointer
 length is just one of its parameters we accept on this stage of the project.
 
-Summing up, we expect to see in the IR integers of the following lengths: 8, 16, 32, 64 and 128
+Summing up, we expect to see in the IR integers of the following lengths: 1, 8, 16, 32, 64 and 128
 bits.
 
 #### Vectors
@@ -210,11 +212,20 @@ the same data type, the template degrades to `__llvm_<opcode>_<ty>_<ty>`.
 
 In the above example of `add i32 %a, %b`, the polyfill would be named `__llvm_add_i32_i32`.
 
+If `<ty>` is `i1`, it is translated into `bool`. For an example instruction `inst i1 %a, %b`, the
+polyfill would be named `__llvm_inst_bool_bool`.
+
+In case the instruction works with pointer type, and it is possible to infer the pointee type, the
+generic LLVM keyword `ptr` is translated to `p<ty>`. For an example instruction `inst ptr %a, i8 %b`
+if it is known, that `%a` is a pointer to the value of the same type as `%b`, the polyfill would be
+named `__llvm_inst_pi8_i8`. In the situation where the type of the pointee is not known, the
+polyfill will be named `__llvm_inst_ptr_i8`.
+
 #### Intrinsic polyfills
 
 Name template: `__<actual name with _ instead of .>`.
 
-In the above example of `llvm.uadd.with.overflow.i64`, the polyfil would be named
+In the above example of `llvm.uadd.with.overflow.i64`, the polyfill would be named
 `__llvm_uadd_with_overflow_i64`.
 
 ### Operations
