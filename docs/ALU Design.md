@@ -299,18 +299,21 @@ link to the relevant part of the LLVM language reference.
   - `__llvm_ashr_i64_i64 -> i64`
   - `__llvm_ashr_i128_i128 -> i128`
 - [`and`](https://llvm.org/docs/LangRef.html#and-instruction):
+  - `__llvm_and_i1_i1 -> i1`
   - `__llvm_and_i8_i8 -> i8`
   - `__llvm_and_i16_i16 -> i16`
   - `__llvm_and_i32_i32 -> i32`
   - `__llvm_and_i64_i64 -> i64`
   - `__llvm_and_i128_i128 -> i128`
 - [`or`](https://llvm.org/docs/LangRef.html#or-instruction):
+  - `__llvm_or_i1_i1 -> i1`
   - `__llvm_or_i8_i8 -> i8`
   - `__llvm_or_i16_i16 -> i16`
   - `__llvm_or_i32_i32 -> i32`
   - `__llvm_or_i64_i64 -> i64`
   - `__llvm_or_i128_i128 -> i128`
 - [`xor`](https://llvm.org/docs/LangRef.html#xor-instruction):
+  - `__llvm_xor_i1_i1 -> i1`
   - `__llvm_xor_i8_i8 -> i8`
   - `__llvm_xor_i16_i16 -> i16`
   - `__llvm_xor_i32_i32 -> i32`
@@ -338,12 +341,17 @@ link to the relevant part of the LLVM language reference.
   - `__llvm_trunc_i128_to_i32 -> i32`
   - `__llvm_trunc_i128_to_i16 -> i16`
   - `__llvm_trunc_i128_to_i8 -> i8`
+  - `__llvm_trunc_i128_to_i1 -> i1`
   - `__llvm_trunc_i64_to_i32 -> i32`
   - `__llvm_trunc_i64_to_i16 -> i16`
   - `__llvm_trunc_i64_to_i8 -> i8`
+  - `__llvm_trunc_i64_to_i1 -> i1`
   - `__llvm_trunc_i32_to_i16 -> i16`
   - `__llvm_trunc_i32_to_i8 -> i8`
+  - `__llvm_trunc_i32_to_i1 -> i1`
   - `__llvm_trunc_i16_to_i8 -> i8`
+  - `__llvm_trunc_i16_to_i1 -> i1`
+  - `__llvm_trunc_i8_to_i1 -> i1`
 - [`zext .. to`](https://llvm.org/docs/LangRef.html#zext-to-instruction):
   - `__llvm_zext_i1_to_i128 -> i128`
   - `__llvm_zext_i1_to_i64 -> i64`
