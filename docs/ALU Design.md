@@ -345,7 +345,37 @@ link to the relevant part of the LLVM language reference.
   - `__llvm_trunc_i32_to_i8 -> i8`
   - `__llvm_trunc_i16_to_i8 -> i8`
 - [`zext .. to`](https://llvm.org/docs/LangRef.html#zext-to-instruction):
+  - `__llvm_zext_i1_to_i128 -> i128`
+  - `__llvm_zext_i1_to_i64 -> i64`
+  - `__llvm_zext_i1_to_i32 -> i32`
+  - `__llvm_zext_i1_to_i16 -> i16`
+  - `__llvm_zext_i1_to_i8 -> i8`
+  - `__llvm_zext_i8_to_i128 -> i128`
+  - `__llvm_zext_i8_to_i64 -> i64`
+  - `__llvm_zext_i8_to_i32 -> i32`
+  - `__llvm_zext_i8_to_i16 -> i16`
+  - `__llvm_zext_i16_to_i128 -> i128`
+  - `__llvm_zext_i16_to_i64 -> i64`
+  - `__llvm_zext_i16_to_i32 -> i32`
+  - `__llvm_zext_i32_to_i128 -> i128`
+  - `__llvm_zext_i32_to_i64 -> i64`
+  - `__llvm_zext_i64_to_i128 -> i128`
 - [`sext .. to`](https://llvm.org/docs/LangRef.html#sext-to-instruction):
+  - `__llvm_sext_i1_to_i128 -> i128`
+  - `__llvm_sext_i1_to_i64 -> i64`
+  - `__llvm_sext_i1_to_i32 -> i32`
+  - `__llvm_sext_i1_to_i16 -> i16`
+  - `__llvm_sext_i1_to_i8 -> i8`
+  - `__llvm_sext_i8_to_i128 -> i128`
+  - `__llvm_sext_i8_to_i64 -> i64`
+  - `__llvm_sext_i8_to_i32 -> i32`
+  - `__llvm_sext_i8_to_i16 -> i16`
+  - `__llvm_sext_i16_to_i128 -> i128`
+  - `__llvm_sext_i16_to_i64 -> i64`
+  - `__llvm_sext_i16_to_i32 -> i32`
+  - `__llvm_sext_i32_to_i128 -> i128`
+  - `__llvm_sext_i32_to_i64 -> i64`
+  - `__llvm_sext_i64_to_i128 -> i128`
 
 #### Based on intrinsics
 
