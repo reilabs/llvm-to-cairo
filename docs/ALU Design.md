@@ -80,8 +80,6 @@ The LLVM Language Reference Manual has an extensive list of intrinsics. Here's t
 
 ### Data Types
 
-This ALU will support only integers. Floating point numbers are out of scope of this document.
-
 #### Integers
 
 LLVM IR supports integers of arbitrary width. A general syntax for an integer type is `iN`, where
@@ -125,9 +123,10 @@ LLVM IR has only one generic pointer type - `ptr`, which works as a rough equiva
 in C. Type-specific pointers (e.g. equivalent of C's `int`) existed, but are now deprecated.
 Therefore, we expect to see in the input IR only the generic `ptr` pointer.
 
-Not only do Rust and the Cairo language support a generic pointer type, their support for pointers does
-not follow the mechanism known from C, which would smoothly translate into LLVM IR semantics. Both
-languages operates on strongly typed smart pointers, that handle their own memory under the hood.
+Not only do Rust and the Cairo language support a generic pointer type, their support for pointers
+does not follow the mechanism known from C, which would smoothly translate into LLVM IR semantics.
+Both languages operates on strongly typed smart pointers, that handle their own memory under the
+hood.
 
 Based on these observations, ALU operations must be strongly typed, by the limitation of the
 language it will be implemented in. When the input IR will be parsed, it generic pointer types must
@@ -140,8 +139,8 @@ Neither the Cairo VM, Cairo language nor no-std Rust have support for vectorized
 LLVM IR has vectors as first class citizens. However,
 _[vector types are used where multiple primitive data are operated in parallel using a single instruction (SIMD)](https://llvm.org/docs/LangRef.html#t-vector)_.
 If Cairo target definition supplied to `rustc` does not suggest the existence of vector extension on
-the target platform, we would not expect any vector intrinsics to appear in the IR. Therefore, vector
-support is not planned as part of the initial phase of the project.
+the target platform, we would not expect any vector intrinsics to appear in the IR. Therefore,
+vector support is not planned as part of the initial phase of the project.
 
 #### Type Conversion
 
@@ -198,8 +197,8 @@ br i1 %_3.1, label %panic, label %bb1, !dbg !17
 - by demanding that input data is correct and producing undefined behavior otherwise,
 - by emitting poison values, if producing a correct value is not possible.
 
-Based on these observations, we have decided to deliver the ALU as a collection of stateless arithmetic
-operations.
+Based on these observations, we have decided to deliver the ALU as a collection of stateless
+arithmetic operations.
 
 ### Tests
 
@@ -261,8 +260,8 @@ All other naming rules defined for instructions also apply to intrinsics.
 
 ### Operations
 
-The list below specifies all implementations of arithmetic operations that will be provided by the ALU.
-The list is divided to two parts:
+The list below specifies all implementations of arithmetic operations that will be provided by the
+ALU. The list is divided to two parts:
 
 - Implementations emulating LLVM instructions,
 - Implementations emulating LLVM intrinsics.
