@@ -133,7 +133,7 @@ Both languages operates on strongly typed smart pointers, that handle their own 
 hood.
 
 Based on these observations, ALU operations must be strongly typed, by the limitation of the
-language it will be implemented in. When the input IR will be parsed, it generic pointer types must
+language it will be implemented in. When the input IR will be parsed, its generic pointer types must
 be inferred from the context, to allow matching with the proper implementation.
 
 #### Vectors
