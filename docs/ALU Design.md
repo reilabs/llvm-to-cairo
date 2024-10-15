@@ -101,18 +101,22 @@ LLVM point of view a pointer must have a finite size, this decision must be made
 feature of the architecture. We have evaluated the following choices:
 
 - The Cairo language already has 32 bit `usize`, so we can follow this approach, making `usize` and
-  `isize` also 32 bit,
+  `isize` also 32 bit. This approach was rejected for the lack of the strong rationale behind
+  Cairo's choice of this particular width. It does not seem to correspond with any feature of the
+  platform architecture.
 - The architecture's natural word size is 252 bit, being the length of the field element. It may be
-  reasonable to set `usize` and `isize` length to 252 bit,
+  reasonable to set `usize` and `isize` length to 252 bit.
 - 256 bit is the next power-of-2 after 252. Having `usize` and `isize` 256 bit long leaves 4 extra
   bits that may be used to keep some metadata.
 
 Ultimately the size of `usize` and `isize` has been decided to be 64 bits, which is neither of the
 above possibilities. This length is a consequence of using the `aarch64-unknown-none-softfloat`
 target triple. The choice of the triple determines the length of the pointer which in turn
-determines the length of `usize`. This target triple is a temporary choice before a custom target
-triple is proposed. It has been chosen for its soft float support and no host operating system. The
-pointer length is just one of its parameters we accept at this stage of the project.
+determines the length of `usize`. This specific triple has been chosen for its soft float support
+and no host operating system. The pointer length is just one of its parameters we accept at this
+stage of the project. This target triple is a temporary choice before a custom target triple is
+proposed. When designing our custom triple, it is possible that the choice of `usize` and `isize`
+width will be reevaluated and possibly changed to match the width of the field element.
 
 Summing up, we expect to see in the IR integers of the following lengths: 1, 8, 16, 32, 64 and 128
 bits. Specifically, do not intend to add operations over arbitrary-width integers.
