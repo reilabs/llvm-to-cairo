@@ -16,7 +16,7 @@ document will be updated.
 
 ## Research
 
-ALU will have to target two concepts of LLVM IR: instructions and intrinsics.
+ALU will have to target two concepts in the LLVM IR: instructions and intrinsics.
 
 ### Instructions
 
@@ -70,7 +70,7 @@ The example above includes the following line:
 %0 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %left, i64 %right), !dbg !17
 ```
 
-Unlike the previous example, this snippet does nto contain the `add` instruction. The adding
+Unlike the previous example, this snippet does not contain the `add` instruction. The adding
 operation is done by an intrinsic named `llvm.uadd.with.overflow.i64`, which is called with the
 `call` instruction. The intrinsic is defined in the LLVM codebase and its source code does not make
 it into the `.ll` file produced out of the adding operation in Rust code.
@@ -78,7 +78,7 @@ it into the `.ll` file produced out of the adding operation in Rust code.
 The LLVM Language Reference Manual has an extensive list of intrinsics. Here's the example of
 [`llvm.uadd.with.overflow.<ty>`](https://llvm.org/docs/LangRef.html#llvm-uadd-with-overflow-intrinsics).
 
-### Data types
+### Data Types
 
 This ALU will support only integers. Floating point numbers are out of scope of this document.
 
@@ -97,7 +97,7 @@ abstraction, the Cairo language supports
 with the same increment Cairo does, plus architecture-dependent `isize` and `usize`. Rust also
 supports booleans.
 
-The Cairo VM does not have a classical registers of length constrained by the hardware. Therefore
+The Cairo VM does not have classical registers of a length constrained by the hardware. Therefore
 there is no obvious indicator of how long `usize`/`isize` should be on that target. Since from the
 LLVM point of view a pointer must have a finite size, this decision must be made based on some other
 feature of the architecture. We have evaluated the following choices:
@@ -114,7 +114,7 @@ above possibilities. This length is a consequence of using the `aarch64-unknown-
 target triple. The choice of the triple determines the length of the pointer which in turn
 determines the length of `usize`. This target triple is a temporary choice before a custom target
 triple is proposed. It has been chosen for its soft float support and no host operating system. The
-pointer length is just one of its parameters we accept on this stage of the project.
+pointer length is just one of its parameters we accept at this stage of the project.
 
 Summing up, we expect to see in the IR integers of the following lengths: 1, 8, 16, 32, 64 and 128
 bits.
@@ -125,9 +125,9 @@ LLVM IR has only one generic pointer type - `ptr`, which works as a rough equiva
 in C. Type-specific pointers (e.g. equivalent of C's `int`) existed, but are now deprecated.
 Therefore, we expect to see in the input IR only the generic `ptr` pointer.
 
-Not only Rust and the Cairo language support a generic pointer type, their support for pointer does
+Not only do Rust and the Cairo language support a generic pointer type, their support for pointers does
 not follow the mechanism known from C, which would smoothly translate into LLVM IR semantics. Both
-languages operates on strongly typed smart pointers, that handle, under the hood, their own memory.
+languages operates on strongly typed smart pointers, that handle their own memory under the hood.
 
 Based on these observations, ALU operations must be strongly typed, by the limitation of the
 language it will be implemented in. When the input IR will be parsed, it generic pointer types must
@@ -135,15 +135,15 @@ be inferred from the context, to allow matching with the proper implementation.
 
 #### Vectors
 
-Neither the Cairo VM, Cairo language nor no-std Rust have support for vector operations.
+Neither the Cairo VM, Cairo language nor no-std Rust have support for vectorized operations.
 
 LLVM IR has vectors as first class citizens. However,
 _[vector types are used where multiple primitive data are operated in parallel using a single instruction (SIMD)](https://llvm.org/docs/LangRef.html#t-vector)_.
-If Cairo target definition supplied to `rustc` will not suggest the existence of vector extension on
-the target platform, we do not expect any vector intrinsics to appear in the IR. Therefore, vector
-support is not planned in the initial phase of the project.
+If Cairo target definition supplied to `rustc` does not suggest the existence of vector extension on
+the target platform, we would not expect any vector intrinsics to appear in the IR. Therefore, vector
+support is not planned as part of the initial phase of the project.
 
-#### Type conversion
+#### Type Conversion
 
 Cairo does not have Rust's `as` keyword, so it's not possible to do e.g. `let a = b as u32` given
 `b` is a `u64`.
@@ -155,7 +155,7 @@ disadvantages:
 - there is no automatic wraparound as in the case of `as`.
 
 Should type conversion be necessary in the implementation of the operations, it will need to handle
-the type conversion with `try_into()` and manual recover from errors:
+the type conversion with `try_into()` and manually recover from errors:
 
 ```rust
 let result: u32 = match sum.try_into() {
@@ -198,14 +198,14 @@ br i1 %_3.1, label %panic, label %bb1, !dbg !17
 - by demanding that input data is correct and producing undefined behavior otherwise,
 - by emitting poison values, if producing a correct value is not possible.
 
-Based on these observations, we decide to deliver the ALU as a collection of stateless arithmetic
+Based on these observations, we have decided to deliver the ALU as a collection of stateless arithmetic
 operations.
 
 ### Tests
 
 Cairo has an
 [integrated test framework](https://book.cairo-lang.org/ch10-01-how-to-write-tests.html), similar to
-the one offered by Rust. Our ALU implementation will then come with a test suite to verify that we
+the one offered by Rust. Our ALU implementation will come with a test suite to verify that we
 implement the desired behavior, e.g. to make sure we indicate overflow on obvious situations like
 `0xFFFFFFFF + 1` for a `u32` add.
 
@@ -233,9 +233,9 @@ Each function will follow the semantics of its LLVM IR counterpart. This require
 
 Each function will follow the naming scheme described in the relevant section below.
 
-### Naming convention
+### Naming Convention
 
-#### Instruction polyfills
+#### Instruction Polyfills
 
 Name template: `__llvm_<opcode>_<ty1>_<ty2>`. In case the instruction works with both operands of
 the same data type, the template degrades to `__llvm_<opcode>_<ty>_<ty>`.
@@ -249,7 +249,7 @@ In case the instruction works with pointer type, the generic LLVM keyword `ptr` 
 `p<ty>`. For an example instruction `inst ptr %a, i8 %b`, where `%a` is a pointer to the value of
 the same type as `%b`, the polyfill would be named `__llvm_inst_pi8_i8`.
 
-#### Intrinsic polyfills
+#### Intrinsic Polyfills
 
 Name template: `__<actual name with _ instead of .>_<ty>_<ty>`, where type `<ty>` indicates every
 argument accepted by the intrinsic.
@@ -261,17 +261,17 @@ All other naming rules defined for instructions also apply to intrinsics.
 
 ### Operations
 
-The list below specifies all implementations of arithmetic operations that will be provided by ALU.
+The list below specifies all implementations of arithmetic operations that will be provided by the ALU.
 The list is divided to two parts:
 
-- implementations emulating LLVM instructions,
-- implementations emulating LLVM intrinsics.
+- Implementations emulating LLVM instructions,
+- Implementations emulating LLVM intrinsics.
 
 Implementations for every supported integer lengths are specified. Their names follow the naming
 convention explained in the section above. Each instruction or intrinsic name is a link to the
 relevant part of the LLVM Language Reference Manual.
 
-#### Based on instructions
+#### Based on Instructions
 
 - [`add`](https://llvm.org/docs/LangRef.html#add-instruction):
   - `__llvm_add_i8_i8 -> i8`
@@ -584,7 +584,7 @@ relevant part of the LLVM Language Reference Manual.
   - `__llvm_select_bool_i64_i64 -> bool`,
   - `__llvm_select_bool_i128_i128 -> bool`,
 
-#### Based on intrinsics
+#### Based on Intrinsics
 
 - [`llvm.abs.*`](https://llvm.org/docs/LangRef.html#llvm-abs-intrinsic):
   - `__llvm_abs_i8 -> i8`,
