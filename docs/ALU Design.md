@@ -115,7 +115,7 @@ triple is proposed. It has been chosen for its soft float support and no host op
 pointer length is just one of its parameters we accept at this stage of the project.
 
 Summing up, we expect to see in the IR integers of the following lengths: 1, 8, 16, 32, 64 and 128
-bits.
+bits. Specifically, do not intend to add operations over arbitrary-width integers.
 
 #### Pointers
 
