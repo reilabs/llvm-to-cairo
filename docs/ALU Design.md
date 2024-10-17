@@ -253,10 +253,10 @@ the polyfills implementations will be translated to `FlatLowered` objects and th
 `.flo` files. Then, on the linking phase, all the `.flo` files (those created from arithmetic
 operations implementations and those from the LLVM IR) will be linked together.
 
-As discussed in the relevant section of the Research part, each operation will be an independent,
-stateless block of code composed of a single Cairo
-[function](https://book.cairo-lang.org/ch02-03-functions.html), which is an equivalent concept of a
-function in any other procedural programming language.
+As discussed in the relevant section of the Research part, each operation will be a stateless block
+of code composed of a single Cairo [function](https://book.cairo-lang.org/ch02-03-functions.html)
+(possibly composed of subroutines for common parts) which is an equivalent concept of a function in
+any other procedural programming language.
 
 Each function will follow the semantics of its LLVM IR counterpart. This requires:
 
