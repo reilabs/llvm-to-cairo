@@ -124,8 +124,9 @@ bits. Specifically, do not intend to add operations over arbitrary-width integer
 #### Pointers
 
 LLVM IR has only one generic pointer type - `ptr`, which works as a rough equivalent of the `void *`
-in C. Type-specific pointers (e.g. equivalent of C's `int`) existed, but are now deprecated.
-Therefore, we expect to see in the input IR only the generic `ptr` pointer.
+in C. Type-specific pointers (e.g. equivalent of C's `int *`) existed in LLVM in the past, but are
+now deprecated. Therefore, we expect to see in the input IR only the generic `ptr` pointer. This
+does not translate well to higher-level programming languages.
 
 Not only do Rust and the Cairo language support a generic pointer type, their support for pointers
 does not follow the mechanism known from C, which would smoothly translate into LLVM IR semantics.
