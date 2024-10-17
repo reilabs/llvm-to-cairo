@@ -128,14 +128,43 @@ in C. Type-specific pointers (e.g. equivalent of C's `int *`) existed in LLVM in
 now deprecated. Therefore, we expect to see in the input IR only the generic `ptr` pointer. This
 does not translate well to higher-level programming languages.
 
-Not only do Rust and the Cairo language support a generic pointer type, their support for pointers
-does not follow the mechanism known from C, which would smoothly translate into LLVM IR semantics.
-Both languages operates on strongly typed smart pointers, that handle their own memory under the
-hood.
+No-std Rust support for pointers is twofold:
+
+- strongly typed smart pointers with the `Box<>` construct, that handle their own memory under the
+  hood,
+- strongly typed raw pointers that can be dereferenced within an `unsafe {}` block.
+
+Usage of smart pointers translate to multiple LLVM IR instructions, involving heap memory
+allocation. The IR generated from a similar code involving raw pointers is simpler in comparison.
+Bothapproaches ultimately generate the `ptr` LLVM type.
+
+The Cairo language operates solely on strongly typed smart pointers. There is no raw pointers. The
+`unsafe` keyword is reserved for the future use.
 
 Based on these observations, ALU operations must be strongly typed, by the limitation of the
-language it will be implemented in. When the input IR will be parsed, its generic pointer types must
-be inferred from the context, to allow matching with the proper implementation.
+language they will be implemented in. Specifically, we are unable to provide a generic
+`__llvm_instr_ptr` polyfill for an instruction accepting a single pointer argument, because such
+construct is not supported by Cairo. Instead, we must provide the whole family of polyfills, one for
+each possible pointer type:
+
+- `__llvm_instr_pbool`,
+- `__llvm_instr_pi8`,
+- `__llvm_instr_pi16`,
+- `__llvm_instr_pi32`,
+- `__llvm_instr_pi64`,
+- `__llvm_instr_pi128`. Some of the implementations may be omitted if they do not reflect LLVM IR
+  semantics for a given instruction.
+
+When the input IR will is parsed and a generic pointer is found, its concrete type must be inferred
+from the context, to allow matching with the proper implementation. For example this IR snippet:
+
+```llvm
+%num = alloca [4 x i8], align 4
+%_5 = ptrtoint ptr %num to i64, !dbg !13
+```
+
+must be mapped to the following implementation: `__llvm_ptrtoint_pi8_to_i64`, as `num` is a pointer
+to an array of `i8`.
 
 #### Vectors
 
