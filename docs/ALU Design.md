@@ -249,8 +249,9 @@ implement the desired behavior, e.g. to make sure we indicate overflow on obviou
 The ALU will be implemented as a source code written in
 [Cairo](https://book.cairo-lang.org/title-page.html). During the
 [LLVM-to-Cairo compilation pipeline](https://www.notion.so/reilabs/System-Architecture-113d2f80c874802b8480d997347933a2?pvs=4)
-it will be translated to `FlatLowered` objects. Then, on the linking phase, arithmetic operations
-from `FLIR` objects created from the input LLVM IR will be linked with their Cairo implementations.
+the polyfills implementations will be translated to `FlatLowered` objects and then extracted to
+`.flo` files. Then, on the linking phase, all the `.flo` files (those created from arithmetic
+operations implementations and those from the LLVM IR) will be linked together.
 
 As discussed in the relevant section of the Research part, each operation will be an independent,
 stateless block of code composed of a single Cairo
