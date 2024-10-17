@@ -263,7 +263,16 @@ Each function will follow the semantics of its LLVM IR counterpart. This require
 - accepting the same number of arguments, of the same type and in the same order as the original
   operation's operands,
 - returning the same number or values, of the same type and in the same order as the original
-  operation.
+  operation,
+- implementing the exact semantics as expected by LLVM.
+
+As an example, for the `sub` instruction, our polyfill operating on `i8` operands must:
+
+- accept exactly two `i8` operands,
+- the operands must be in the same order, i.e. for `sub %a, %b` our polyfill `__llvm_sub_i8_i8` must
+  accept `a` and `b` in the same order,
+- as `sub %a, %b` performs the `a-b` subtraction, our polyfill must not perform `b-a` instead and
+  all corner cases, like underflow, must be handled in the same way as LLVM handles them.
 
 Each function will follow the naming scheme described in the relevant section below.
 
