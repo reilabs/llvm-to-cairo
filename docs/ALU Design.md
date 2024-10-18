@@ -258,7 +258,7 @@ operations implementations and those from the LLVM IR) will be linked together.
 
 As discussed in the [relevant section of the Research part](#statefulness), each operation will be a
 stateless block of code composed of a single Cairo
-[function](https://book.cairo-lang.org/ch02-03-functions.html)(possibly composed of subroutines for
+[function](https://book.cairo-lang.org/ch02-03-functions.html) (possibly composed of subroutines for
 common parts) which is an equivalent concept of a function in any other procedural programming
 language.
 
@@ -744,7 +744,7 @@ phase. See [Data Types](#data-types) for details.
   - `__llvm_ucmp_i32_i8 -> i8`,
   - `__llvm_ucmp_i64_i8 -> i8`,
   - (\*) `__llvm_ucmp_i128_i8 -> i8`,
-- [`llvm.bitreverse.*`]https://llvm.org/docs/LangRef.html#llvm-bitreverse-intrinsics):
+- [`llvm.bitreverse.*`](https://llvm.org/docs/LangRef.html#llvm-bitreverse-intrinsics):
   - `__llvm_bitreverse_bool -> bool`,
   - `__llvm_bitreverse_i8 -> i8`,
   - `__llvm_bitreverse_i16 -> i16`,
@@ -861,4 +861,4 @@ phase. See [Data Types](#data-types) for details.
   - `__llvm_ushl_sat_i16_i16 -> i16`,
   - `__llvm_ushl_sat_i32_i32 -> i32`,
   - `__llvm_ushl_sat_i64_i64 -> i64`,
-  - (\*) `__llvm_ushl_sat_i128_i128 -> i128`,
+  - (\*) `__llvm_ushl_sat_i128_i128 -> i128`.
