@@ -136,7 +136,7 @@ No-std Rust support for pointers is twofold:
 
 Usage of smart pointers translate to multiple LLVM IR instructions, involving heap memory
 allocation. The IR generated from a similar code involving raw pointers is simpler in comparison.
-Bothapproaches ultimately generate the `ptr` LLVM type.
+Both approaches ultimately generate the `ptr` LLVM type.
 
 The Cairo language operates solely on strongly typed smart pointers. There is no raw pointers. The
 `unsafe` keyword is reserved for the future use.
