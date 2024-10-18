@@ -1,4 +1,4 @@
-# ALU design
+# ALU Design
 
 This document describes the research done for
 [#27 Design ALU](https://github.com/reilabs/llvm-to-cairo/issues/27).
