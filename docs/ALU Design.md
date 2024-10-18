@@ -3,10 +3,10 @@
 This document describes the research done for
 [#27 Design ALU](https://github.com/reilabs/llvm-to-cairo/issues/27).
 
-The first part, **Research**, describes selected features of LLVM IR, Rust and Cairo (both the
-virtual machine and the programming language), that impact the way we must handle arithmetic and
-logic operations. The second part, **Design**, specifies decisions made with regard to the shape of
-the ALU component of the project.
+The first part, [**Research**](#Research), describes selected features of LLVM IR, Rust and Cairo
+(both the virtual machine and the programming language), that impact the way we must handle
+arithmetic and logic operations. The second part, [**Design**](#design), specifies decisions made
+with regard to the shape of the ALU component of the project.
 
 Most of the design decision are based on the outcomes of experiments described in the research part.
 Some decisions are made arbitrarily. All decisions are subject to change, especially if more
@@ -53,10 +53,10 @@ keywords modifying its behavior. An
 
 #### Poison
 
-In the example of `add`, if `nuw` or `nsw` keywords occur, they guarantee specific behavior, i.e. no
-(un)signed overflow. However, if the operands cause the overflow, the instruction returns a poison,
-which is an equivalent of a value indicating undefined behavior that can propagate throughout the
-program.
+In the [example of `add`](#keywords), if `nuw` or `nsw` keywords occur, they guarantee specific
+behavior, i.e. no (un)signed overflow. However, if the operands cause the overflow, the instruction
+returns a poison, which is an equivalent of a value indicating undefined behavior that can propagate
+throughout the program.
 
 [According to the experiment](https://github.com/reilabs/llvm-to-cairo/issues/27#issuecomment-2397645979),
 LLVM does not seem to emit such instructions from the Rust code, so the initial version of ALU will
@@ -64,16 +64,16 @@ not handle `nuw`, `nsw` or other keywords in any specific way.
 
 ### Intrinsics
 
-The example above includes the following line:
+Consider the following LLVM IR code:
 
 ```llvm
 %0 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %left, i64 %right), !dbg !17
 ```
 
-Unlike the previous example, this snippet does not contain the `add` instruction. The adding
-operation is done by an intrinsic named `llvm.uadd.with.overflow.i64`, which is called with the
-`call` instruction. The intrinsic is defined in the LLVM codebase and its source code does not make
-it into the `.ll` file produced out of the adding operation in Rust code.
+Unlike the [previous example](#keywords), this snippet does not contain the `add` instruction. The
+adding operation is done by an intrinsic named `llvm.uadd.with.overflow.i64`, which is called with
+the `call` instruction. The intrinsic is defined in the LLVM codebase and its source code does not
+make it into the `.ll` file produced out of the adding operation in Rust code.
 
 The LLVM Language Reference Manual has an extensive list of intrinsics. Here's the example of
 [`llvm.uadd.with.overflow.<ty>`](https://llvm.org/docs/LangRef.html#llvm-uadd-with-overflow-intrinsics).
@@ -217,7 +217,7 @@ managed during that time.
 Additionally, it has been noticed
 [in one of the experiments](https://github.com/reilabs/llvm-to-cairo/issues/27#issuecomment-2391893640),
 that LLVM IR follows the same principle of not managing the internal state of arithmetic operations.
-This is either done by
+This is either done by:
 
 - returning a tuple containing both the operation result and the state information:
 
@@ -253,10 +253,11 @@ the polyfills implementations will be translated to `FlatLowered` objects and th
 `.flo` files. Then, on the linking phase, all the `.flo` files (those created from arithmetic
 operations implementations and those from the LLVM IR) will be linked together.
 
-As discussed in the relevant section of the Research part, each operation will be a stateless block
-of code composed of a single Cairo [function](https://book.cairo-lang.org/ch02-03-functions.html)
-(possibly composed of subroutines for common parts) which is an equivalent concept of a function in
-any other procedural programming language.
+As discussed in the [relevant section of the Research part](#statefulness), each operation will be a
+stateless block of code composed of a single Cairo
+[function](https://book.cairo-lang.org/ch02-03-functions.html)(possibly composed of subroutines for
+common parts) which is an equivalent concept of a function in any other procedural programming
+language.
 
 Each function will follow the semantics of its LLVM IR counterpart. This requires:
 
@@ -274,7 +275,8 @@ As an example, for the `sub` instruction, our polyfill operating on `i8` operand
 - as `sub %a, %b` performs the `a-b` subtraction, our polyfill must not perform `b-a` instead and
   all corner cases, like underflow, must be handled in the same way as LLVM handles them.
 
-Each function will follow the naming scheme described in the relevant section below.
+Each function will follow the naming scheme described in the
+[relevant section below](#naming-convention).
 
 ### Naming Convention
 
@@ -300,15 +302,15 @@ argument accepted by the intrinsic.
 In the example of `llvm.uadd.with.overflow.i64(i64 %left, i64 %right)`, the polyfill would be named
 `__llvm_uadd_with_overflow_i64_i64`.
 
-All other naming rules defined for instructions also apply to intrinsics.
+All other [naming rules defined for instructions](#instruction-polyfills) also apply to intrinsics.
 
 ### Operations
 
 The list below specifies all implementations of arithmetic operations that will be provided by the
 ALU. The list is divided to two parts:
 
-- Implementations emulating LLVM instructions,
-- Implementations emulating LLVM intrinsics.
+- [Implementations emulating LLVM instructions](#based-on-instructions),
+- [Implementations emulating LLVM intrinsics](#based-on-intrinsics)).
 
 Implementations for every supported integer lengths are specified. Their names follow the naming
 convention explained in the section above. Each instruction or intrinsic name is a link to the
