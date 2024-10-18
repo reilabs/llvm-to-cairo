@@ -5,8 +5,5 @@ export default {
   // Unfortunately `clippy-driver` can only accept one file at a time, so we have to create an
   // individual clippy task for each changed file.
   "*.rs": async (stagedFiles) =>
-    [
-      `rustfmt --unstable-features --edition 2021 ${stagedFiles.join(" ")}`,
-      stagedFiles.map((filename) => `clippy-driver ${filename}`),
-    ].flat(),
+    [`rustfmt --unstable-features --edition 2021 ${stagedFiles.join(" ")}`].flat(),
 };

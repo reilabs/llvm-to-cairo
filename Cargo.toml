@@ -7,7 +7,7 @@ members = [
   "crates/compiler",
   "crates/driver",
   "crates/error",
-  "crates/flir",
+  "crates/flo",
   "crates/rust-test-input",
 ]
 
@@ -30,12 +30,13 @@ rust-version = "1.81.0"
 [workspace.dependencies]
 anyhow = "1.0.89"
 ariadne = "0.4.1"
+bimap = { version = "0.6.3", features = ["serde"] }
 clap = "4.5.16"
 itertools = "0.13.0"
 ltc-cli = { path = "crates/cli" }
 ltc-driver = { path = "crates/driver" }
 ltc-errors = { path = "crates/error" }
-ltc-flir = { path = "crates/flir" }
+ltc-flo = { path = "crates/flo" }
 thiserror = "1.0.63"
 tracing = "0.1.40"
 
