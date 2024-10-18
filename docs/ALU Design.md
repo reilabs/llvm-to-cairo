@@ -672,8 +672,10 @@ phase. See [Data Types](#data-types) for details.
   - `__llvm_umin_i64_i8 -> i64`,
   - (\*) `__llvm_umin_i128_i8 -> i128`,
 - [`llvm.scmp.*`](https://llvm.org/docs/LangRef.html#llvm-scmp-intrinsic):
-  - `scmp` returns needs to return at least `i2`. Since ALU does not operate on such type, the
-    closest possible type is `i8`.
+  - As per the LLVM Language Reference Manual, `scmp` returns needs to return at least `i2`. Since
+    ALU does not operate on such type, the closest possible type is `i8`. Luckily,
+    [this is what LLVM generates](https://blog.llvm.org/posts/2024-08-29-gsoc-three-way-comparison/)
+    for these intrinsics, therefore our implementations will follow this pattern.
   - `__llvm_ucmp_bool_bool -> i8`,
   - `__llvm_scmp_i8_i8 -> i8`,
   - `__llvm_scmp_i16_i8 -> i8`,
@@ -681,8 +683,10 @@ phase. See [Data Types](#data-types) for details.
   - `__llvm_scmp_i64_i8 -> i8`,
   - (\*) `__llvm_scmp_i128_i8 -> i8`,
 - [`llvm.ucmp.*`](https://llvm.org/docs/LangRef.html#llvm-ucmp-intrinsic):
-  - `ucmp` returns needs to return at least `i2`. Since ALU does not operate on such type, the
-    closest possible type is `i8`.
+  - As per the LLVM Language Reference Manual, `ucmp` returns needs to return at least `i2`. Since
+    ALU does not operate on such type, the closest possible type is `i8`. Luckily,
+    [this is what LLVM generates](https://blog.llvm.org/posts/2024-08-29-gsoc-three-way-comparison/)
+    for these intrinsics, therefore our implementations will follow this pattern.
   - `__llvm_ucmp_bool_bool -> i8`,
   - `__llvm_ucmp_i8_i8 -> i8`,
   - `__llvm_ucmp_i16_i8 -> i8`,
