@@ -1,12 +1,12 @@
 [package]
-name = "ltc-flir"
+name = "ltc-flo"
 version.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license-file.workspace = true
 
 authors.workspace = true
-description = "The FlatLowered Intermediate Representation, or FLIR, is a FlatLowered-based IR customized to the needs of the LTC project."
+description = "The FlatLowered Object format, or FLO, is a FlatLowered-like object format customized to the needs of the LTC project."
 keywords.workspace = true
 categories.workspace = true
 
@@ -14,3 +14,6 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+serde = { version = "1.0.210", features = ["derive"] }
+serde_sexpr = "0.1.0"
+bimap.workspace = true
