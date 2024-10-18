@@ -116,14 +116,11 @@ determines the length of `usize`. This specific triple has been chosen for its s
 and no host operating system. The pointer length is just one of its parameters we accept at this
 stage of the project. This target triple is a temporary choice before a custom target triple is
 proposed. When designing our custom triple, it is possible that the choice of `usize` and `isize`
-width will be reevaluated and possibly changed to match the width of the field element. Also, since
-`aarch64-unknown-none-softfloat` does not naturally support 128 bit integers, we do not expect LLVM
-to generate `i128` in the IR. Our custom triple may support this data type.
+width will be reevaluated and possibly changed to match the width of the field element.
 
-Summing up, we expect to see in the IR integers of the following lengths: 1, 8, 16, 32 and 64 bits.
-After proposing our custom triple, we will expect 128 bit integers to appear in the IR, which will
-require extending the polyfills set with `i128` support. We do not intend to support operations over
-arbitrary-width integers.
+Summing up, we expect to see in the IR integers of the following lengths: 1, 8, 16, 32, 64 and 128
+bits. We do not intend to support operations over arbitrary-width integers. We also decided to add
+support for 128 bit integers in later phase of the project.
 
 #### Pointers
 
