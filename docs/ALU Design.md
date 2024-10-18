@@ -174,7 +174,7 @@ to an array of `i8`.
 Neither the Cairo VM, Cairo language nor no-std Rust have support for vectorized operations.
 
 LLVM IR has vectors as first class citizens. However,
-_[vector types are used where multiple primitive data are operated in parallel using a single instruction (SIMD)](https://llvm.org/docs/LangRef.html#vector-type)_.
+_vector types are [used](https://llvm.org/docs/LangRef.html#vector-type) where multiple primitive data are operated in parallel using a single instruction (SIMD)_.
 If Cairo target definition supplied to `rustc` does not suggest the existence of vector extension on
 the target platform, we would not expect any vector intrinsics to appear in the IR. Therefore,
 vector support is not planned as part of the initial phase of the project.
@@ -249,7 +249,7 @@ implement the desired behavior, e.g. to make sure we indicate overflow on obviou
 
 ### Overview
 
-The ALU will be implemented as a source code written in
+The ALU will be implemented as source code written in
 [Cairo](https://book.cairo-lang.org/title-page.html). During the
 [LLVM-to-Cairo compilation pipeline](https://www.notion.so/reilabs/System-Architecture-113d2f80c874802b8480d997347933a2?pvs=4)
 the polyfills implementations will be translated to `FlatLowered` objects and then extracted to
