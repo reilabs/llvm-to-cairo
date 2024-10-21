@@ -10,7 +10,10 @@ use std::{
 use derivative::Derivative;
 use downcast_rs::Downcast;
 
-use crate::pass::{ConcretePass, Pass, PassKey};
+use crate::{
+    context::SourceContext,
+    pass::{ConcretePass, PassKey},
+};
 
 /// Pass data is output by any given pass
 pub type PassData = Box<dyn PassDataOps>;
@@ -22,11 +25,12 @@ pub type PassData = Box<dyn PassDataOps>;
 ///
 /// # Recommended Functions
 ///
-/// On the concrete type that implements this trait, we recommend implementing:
+/// On the concrete type that implements this trait, it is recommended to
+/// implement:
 ///
-/// - An appropriate `new(...) -> Self` associated function.
-/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
-///   can usually simply call `Box::new(Self::new(...))`.
+/// - A `new(...) -> Self` associated function.
+/// - A `new_dyn(...) -> PassData` associated function. This one can usually
+///   simply call `Box::new(Self::new(...))`.
 ///
 /// These aid in providing a uniform way to construct pass data.
 ///
@@ -98,11 +102,12 @@ impl dyn PassDataOps {
 ///
 /// # Recommended Functions
 ///
-/// On the concrete type that implements this trait, we recommend implementing:
+/// On the concrete type that implements this trait, it is recommended to
+/// implement:
 ///
-/// - An appropriate `new(...) -> Self` associated function.
-/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
-///   can usually simply call `Box::new(Self::new(...))`.
+/// - A `new(...) -> Self` associated function.
+/// - A `new_dyn(...) -> PassData` associated function. This one can usually
+///   simply call `Box::new(Self::new(...))`.
 ///
 /// These aid in providing a uniform way to construct pass data.
 pub trait ConcretePassData
@@ -111,6 +116,65 @@ where
 {
     /// The pass with which the data is associated.
     type Pass: ConcretePass;
+}
+
+/// Pass return data that returns a dynamic [`PassData`].
+pub type DynPassReturnData = PassReturnData<PassData>;
+
+/// The data returned when executing a pass.
+#[derive(Derivative)]
+#[derivative(Debug(bound = "T: Debug"))]
+pub struct PassReturnData<T> {
+    /// The newly-modified source context.
+    pub source_context: SourceContext,
+
+    /// The data returned by the pass.
+    pub data: T,
+}
+impl<T> PassReturnData<T> {
+    /// Creates a new instance of the pass return data.
+    pub fn new(source_context: SourceContext, data: T) -> Self {
+        Self {
+            source_context,
+            data,
+        }
+    }
+}
+
+impl PassReturnData<PassData> {
+    /// Allows you to get the returned pass data as the concrete data type `T`,
+    /// returning `&T` if possible and `None` otherwise.
+    #[must_use]
+    pub fn data_as<T: ConcretePassData>(&self) -> Option<&T> {
+        self.data.as_any().downcast_ref::<T>()
+    }
+
+    /// Allows you to get the returned pass data as the concrete data type `T`,
+    /// returning `&T` if possible and `None` otherwise.
+    pub fn data_as_mut<T: ConcretePassData>(&mut self) -> Option<&mut T> {
+        self.data.as_any_mut().downcast_mut::<T>()
+    }
+
+    /// Allows you to get the returned pass data as the concrete data type `T`,
+    /// returning `&T` if possible.
+    ///
+    /// # Panics
+    ///
+    /// If `self.data` is not an instance of `T`.
+    #[must_use]
+    pub fn unwrap_data_as<T: ConcretePassData>(&self) -> &T {
+        self.data_as::<T>().unwrap()
+    }
+
+    /// Allows you to get the returned pass data as the concrete data type `T`,
+    /// returning `&mut T` if possible.
+    ///
+    /// # Panics
+    ///
+    /// If `self.data` is not an instance of `T`.
+    pub fn unwrap_data_as_mut<T: ConcretePassData>(&mut self) -> &mut T {
+        self.data_as_mut::<T>().unwrap()
+    }
 }
 
 /// A mapping from pass keys to the associated pass data.
@@ -147,22 +211,22 @@ impl<T> PassDataMap<T> {
         self.mapping.clear();
     }
 
-    /// Gets a reference to the last-written data for the provided `pass` if it
-    /// exists, and returns `None` otherwise.
+    /// Gets a reference to the last-written data for the pass given by the
+    /// provided `key` if it exists. exists, and returns `None` otherwise.
     #[must_use]
-    pub fn get_dyn(&self, pass: &Pass) -> Option<&T> {
-        self.mapping.get(&pass.key_dyn())
+    pub fn get_key(&self, key: PassKey) -> Option<&T> {
+        self.mapping.get(&key)
     }
 
     /// Writes the provided `data` into the container associating it with the
-    /// pass `P`, overwriting any existing data for that pass.
-    pub fn put_dyn(&mut self, pass: &Pass, data: T) {
-        self.mapping.insert(pass.key_dyn(), data);
+    /// pass described by `key`, overwriting any existing data for that pass.
+    pub fn put_key(&mut self, key: PassKey, data: T) {
+        self.mapping.insert(key, data);
     }
 
-    /// Clears the data for the provided `pass`, if it exists.
-    pub fn clear_dyn(&mut self, pass: &Pass) {
-        self.mapping.remove(&pass.key_dyn());
+    /// Clears the data for the pass given by the provided `key`, if it exists.
+    pub fn clear_key(&mut self, key: PassKey) {
+        self.mapping.remove(&key);
     }
 }
 

@@ -40,13 +40,12 @@ use std::{
     fmt::Debug,
 };
 
-use derivative::Derivative;
 use downcast_rs::Downcast;
 use ltc_errors::compile::{Error, Result};
 
 use crate::{
-    pass::data::{ConcretePassData, DynPassDataMap, PassData},
-    source::SourceContext,
+    context::SourceContext,
+    pass::data::{ConcretePassData, DynPassDataMap, DynPassReturnData},
 };
 
 /// A pass is a self-contained unit of functionality that performs some
@@ -56,69 +55,6 @@ pub type Pass = Box<dyn PassOps>;
 /// A handle that uniquely identifies the pass.
 pub type PassKey = TypeId;
 
-/// Pass return data that returns a dynamic [`PassData`].
-pub type DynPassReturnData = PassReturnData<PassData>;
-
-/// The data returned when executing a pass.
-#[derive(Derivative)]
-#[derivative(Debug(bound = "T: Debug"))]
-pub struct PassReturnData<T> {
-    /// The newly-modified source context.
-    pub source_context: SourceContext,
-
-    /// The data returned by the pass.
-    pub data: T,
-}
-impl<T> PassReturnData<T> {
-    /// Creates a new instance of the pass return data.
-    pub fn new(source_context: SourceContext, data: T) -> Self {
-        Self {
-            source_context,
-            data,
-        }
-    }
-}
-
-impl PassReturnData<PassData> {
-    /// Allows you to get the returned pass data as the concrete data type `T`,
-    /// returning `&T` if possible and `None` otherwise.
-    #[must_use]
-    pub fn data_as<T: ConcretePassData>(&self) -> Option<&T> {
-        self.data.as_any().downcast_ref::<T>()
-    }
-
-    /// Allows you to get the returned pass data as the concrete data type `T`,
-    /// returning `&T` if possible and `None` otherwise.
-    pub fn data_as_mut<T: ConcretePassData>(&mut self) -> Option<&mut T> {
-        self.data.as_any_mut().downcast_mut::<T>()
-    }
-
-    /// Allows you to get the returned pass data as the concrete data type `T`,
-    /// returning `&T` if possible.
-    ///
-    /// # Panics
-    ///
-    /// If `self.data` is not an instance of `T`.
-    #[must_use]
-    pub fn unwrap_data_as<T: ConcretePassData>(&self) -> &T {
-        self.data_as::<T>().unwrap()
-    }
-
-    /// Allows you to get the returned pass data as the concrete data type `T`,
-    /// returning `&mut T` if possible.
-    ///
-    /// # Panics
-    ///
-    /// If `self.data` is not an instance of `T`.
-    pub fn unwrap_data_as_mut<T: ConcretePassData>(&mut self) -> &mut T {
-        self.data_as_mut::<T>().unwrap()
-    }
-}
-
-/// The data returned when executing a pass where the pass data is of a
-/// dynamically-dispatched type.
-pub type DynamicPassReturnData = PassReturnData<PassData>;
-
 /// The operations that we expect one of our passes to have.
 ///
 /// The implementation is designed te be used via dynamic dispatch, and hence
@@ -126,11 +62,12 @@ pub type DynamicPassReturnData = PassReturnData<PassData>;
 ///
 /// # Recommended Functions
 ///
-/// On the concrete type that implements this trait, we recommend implementing:
+/// On the concrete type that implements this trait, it is recommended to
+/// implement:
 ///
-/// - An appropriate `new(...) -> Self` associated function.
-/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
-///   can usually simply call `Box::new(Self::new(...))`.
+/// - A `new(...) -> Self` associated function.
+/// - A `new_dyn(...) -> PassData` associated function. This one can usually
+///   simply call `Box::new(Self::new(...))`.
 ///
 /// These aid in providing a uniform way to construct pass data.
 ///
@@ -163,13 +100,25 @@ where
         &mut self,
         context: SourceContext,
         pass_data: &DynPassDataMap,
-    ) -> Result<DynamicPassReturnData>;
+    ) -> Result<DynPassReturnData>;
 
     /// Gets a slice containing the keys of the passes whose output this pass
     /// depends on.
     fn depends(&self) -> &[PassKey];
 
-    /// Gets a slice containing the keys of the passes
+    /// Gets a slice containing the keys of the passes that are invalidated by
+    /// this pass.
+    ///
+    /// # Future-Gazing
+    ///
+    /// In the future (#56), we may instead want passes to declare what _kinds
+    /// of data_ they change in the context (e.g. `Structure`, `Alias`, and so
+    /// on). This would make it far less brittle, as pass implementers would
+    /// not need to know the details of passes that they might accidentally
+    /// invalidate.
+    ///
+    /// This is for the future, as the current pass infrastructure is more of a
+    /// framework to ensure we do not paint ourselves into a corner.
     fn invalidates(&self) -> &[PassKey];
 
     /// Returns a duplicate of this pass.
@@ -233,11 +182,12 @@ impl dyn PassOps {
 ///
 /// # Recommended Functions
 ///
-/// On the concrete type that implements this trait, we recommend implementing:
+/// On the concrete type that implements this trait, it is recommended to
+/// implement:
 ///
-/// - An appropriate `new(...) -> Self` associated function.
-/// - An appropriate `new_dyn(...) -> PassData` associated function. This one
-///   can usually simply call `Box::new(Self::new(...))`.
+/// - A `new(...) -> Self` associated function.
+/// - A `new_dyn(...) -> PassData` associated function. This one can usually
+///   simply call `Box::new(Self::new(...))`.
 ///
 /// These aid in providing a uniform way to construct pass data.
 pub trait ConcretePass
@@ -281,6 +231,12 @@ impl PassManagerReturnData {
 /// ordering based on dependencies between passes. This ensures that pass
 /// orderings are correct, without the need for costly manual validation.
 pub struct PassManager {
+    /// The set of passes organized into the order in which they will be
+    /// executed.
+    ///
+    /// Note that this `pass_ordering` may contain passes more than once,
+    /// depending on the dependencies and invalidations expressed between the
+    /// passes.
     pass_ordering: Vec<Pass>,
 }
 
@@ -305,12 +261,24 @@ impl PassManager {
         let mut pass_data_map = DynPassDataMap::new();
 
         for pass in &mut self.pass_ordering {
-            let PassReturnData {
+            // Execute the pass and grab both the potentially-modified source context and
+            // the data returned by the pass.
+            let DynPassReturnData {
                 source_context,
                 data,
             } = pass.run(context, &pass_data_map)?;
-            pass_data_map.put_dyn(pass, data);
 
+            // After this pass runs, we have to ensure that anything that it invalidates has
+            // the data removed from the pass data mapping.
+            let invalidated_passes = pass.invalidates();
+            invalidated_passes
+                .iter()
+                .for_each(|p_key| pass_data_map.clear_key(*p_key));
+
+            // Finally, we can assign the new data to the pass data mapping.
+            pass_data_map.put_key(pass.key_dyn(), data);
+
+            // Our context gets overwritten with the new context.
             context = source_context;
         }
 

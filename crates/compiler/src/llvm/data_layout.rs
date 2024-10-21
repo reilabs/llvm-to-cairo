@@ -8,7 +8,21 @@ use chumsky::{
 };
 use ltc_errors::compile::{Error, Result};
 
-use crate::constant::BYTE_SIZE;
+use crate::constant::{
+    BYTE_SIZE,
+    DEFAULT_FLOAT_128_LAYOUT,
+    DEFAULT_FLOAT_16_LAYOUT,
+    DEFAULT_FLOAT_32_LAYOUT,
+    DEFAULT_FLOAT_64_LAYOUT,
+    DEFAULT_INTEGER_16_LAYOUT,
+    DEFAULT_INTEGER_1_LAYOUT,
+    DEFAULT_INTEGER_32_LAYOUT,
+    DEFAULT_INTEGER_64_LAYOUT,
+    DEFAULT_INTEGER_8_LAYOUT,
+    DEFAULT_POINTER_0_LAYOUT,
+    DEFAULT_VECTOR_128_LAYOUT,
+    DEFAULT_VECTOR_64_LAYOUT,
+};
 
 /// Information about the expected data-layout for this module.
 ///
@@ -73,7 +87,7 @@ impl DataLayout {
     /// described [here](https://llvm.org/docs/LangRef.html#data-layout). In
     /// addition, we:
     ///
-    /// - Default to 32 and 64-bit native integer widths.
+    /// - Default to 32 and 64-bit for the native integer widths.
     /// - Default to independent function pointers aligned to 64 bits.
     /// - Default to the ELF mangling scheme if none is specified.
     ///
@@ -84,51 +98,69 @@ impl DataLayout {
     pub fn new(layout_string: &str) -> Result<Self> {
         let parts = layout_string.split('-');
 
-        let mut endianness = None;
-        let mut mangling = None;
-        let mut stack_alignment = None;
-        let mut program_address_space = None;
-        let mut global_address_space = None;
-        let mut alloc_address_space = None;
-        let mut pointer_specs = vec![];
-        let mut int_specs = vec![];
-        let mut vector_specs = vec![];
-        let mut float_specs = vec![];
-        let mut aggregate_spec = None;
-        let mut function_pointer_spec = None;
-        let mut native_integer_widths = None;
-        let mut nointptr_addr_spaces = None;
+        // Allocate a default that is KNOWINGLY INCOMPLETE. This is not a valid layout
+        // to return, but serves as a place to stick our specifications as we parse
+        // them.
+        let mut layout = DataLayout {
+            endianness:              Endianness::Little,
+            mangling:                Mangling::ELF,
+            stack_alignment:         0,
+            program_address_space:   0,
+            global_address_space:    0,
+            alloc_address_space:     0,
+            pointer_layouts:         vec![],
+            integer_layouts:         vec![],
+            vector_layouts:          vec![],
+            float_layouts:           vec![],
+            aggregate_layout:        AggregateLayout {
+                abi_alignment:       0,
+                preferred_alignment: 64,
+            },
+            function_pointer_layout: FunctionPointerLayout {
+                ptr_type:      FunctionPointerType::Independent,
+                abi_alignment: 64,
+            },
+            native_integer_widths:   NativeIntegerWidths {
+                widths: vec![32, 64],
+            },
+            nointptr_address_spaces: NonIntegralPointerAddressSpaces {
+                address_spaces: Vec::new(),
+            },
+        };
 
+        // Parse out each specification from the data-layout string.
         for part in parts {
             if let Ok(e) = Endianness::parser().parse(part) {
-                endianness = Some(e);
+                layout.endianness = e;
             } else if let Ok(m) = Mangling::parser().parse(part) {
-                mangling = Some(m);
+                layout.mangling = m;
             } else if let Ok(align) = parsing::stack_alignment().parse(part) {
-                stack_alignment = Some(align);
+                layout.stack_alignment = align;
             } else if let Ok(p_addr) = parsing::program_address_space().parse(part) {
-                program_address_space = Some(p_addr);
+                layout.program_address_space = p_addr;
             } else if let Ok(g_addr) = parsing::global_address_space().parse(part) {
-                global_address_space = Some(g_addr);
+                layout.global_address_space = g_addr;
             } else if let Ok(a_addr) = parsing::alloc_address_space().parse(part) {
-                alloc_address_space = Some(a_addr);
+                layout.alloc_address_space = a_addr;
             } else if let Ok(ptr_spec) = PointerLayout::parser().parse(part) {
-                pointer_specs.push(ptr_spec);
+                layout.pointer_layouts.push(ptr_spec);
             } else if let Ok(int_spec) = IntegerLayout::parser().parse(part) {
-                int_specs.push(int_spec);
+                layout.integer_layouts.push(int_spec);
             } else if let Ok(vec) = VectorLayout::parser().parse(part) {
-                vector_specs.push(vec);
+                layout.vector_layouts.push(vec);
             } else if let Ok(float_spec) = FloatLayout::parser().parse(part) {
-                float_specs.push(float_spec);
+                layout.float_layouts.push(float_spec);
             } else if let Ok(agg) = AggregateLayout::parser().parse(part) {
-                aggregate_spec = Some(agg);
+                layout.aggregate_layout = agg;
             } else if let Ok(f_ptr) = FunctionPointerLayout::parser().parse(part) {
-                function_pointer_spec = Some(f_ptr);
+                layout.function_pointer_layout = f_ptr;
             } else if let Ok(iw) = NativeIntegerWidths::parser().parse(part) {
-                native_integer_widths = Some(iw);
+                layout.native_integer_widths = iw;
             } else if let Ok(npa) = NonIntegralPointerAddressSpaces::parser().parse(part) {
-                nointptr_addr_spaces = Some(npa);
+                layout.nointptr_address_spaces = npa;
             } else if part.is_empty() {
+                // We don't know if empty parts are allowed, so we just behave permissively
+                // here. It cannot introduce any bugs to be permissive in this case.
                 continue;
             } else {
                 Err(Error::InvalidDataLayoutSpecification(
@@ -138,91 +170,35 @@ impl DataLayout {
             }
         }
 
-        // Compute the defaults if we have not parsed anything for a given segment.
-        let endianness = endianness.unwrap_or(Endianness::Little);
-        let mangling = mangling.unwrap_or(Mangling::ELF);
-        let stack_alignment = stack_alignment.unwrap_or(0);
-        let program_address_space = program_address_space.unwrap_or(0);
-        let global_address_space = global_address_space.unwrap_or(0);
-        let alloc_address_space = alloc_address_space.unwrap_or(0);
-        let pointer_layouts = Self::pointer_specs_or_defaults(pointer_specs);
-        let integer_layouts = Self::int_specs_or_defaults(int_specs);
-        let vector_layouts = Self::vec_specs_or_defaults(vector_specs);
-        let float_layouts = Self::float_specs_or_defaults(float_specs);
-        let aggregate_layout = aggregate_spec.unwrap_or(AggregateLayout {
-            abi_alignment:       0,
-            preferred_alignment: 64,
-        });
-        let function_pointer_layout = function_pointer_spec.unwrap_or(FunctionPointerLayout {
-            ptr_type:      FunctionPointerType::Independent,
-            abi_alignment: 64,
-        });
-        let native_integer_widths = native_integer_widths.unwrap_or(NativeIntegerWidths {
-            widths: vec![32, 64],
-        });
-        let nointptr_address_spaces =
-            nointptr_addr_spaces.unwrap_or(NonIntegralPointerAddressSpaces {
-                address_spaces: Vec::new(),
-            });
+        // Finally we add the defaults for vector-typed fields as these have to be done
+        // after parsing.
+        layout.pointer_layouts = Self::pointer_specs_or_defaults(layout.pointer_layouts);
+        layout.integer_layouts = Self::int_specs_or_defaults(layout.integer_layouts);
+        layout.vector_layouts = Self::vec_specs_or_defaults(layout.vector_layouts);
+        layout.float_layouts = Self::float_specs_or_defaults(layout.float_layouts);
 
         // Finally we can build the data layout
-        let layout = DataLayout {
-            endianness,
-            mangling,
-            stack_alignment,
-            program_address_space,
-            global_address_space,
-            alloc_address_space,
-            pointer_layouts,
-            integer_layouts,
-            vector_layouts,
-            float_layouts,
-            aggregate_layout,
-            function_pointer_layout,
-            native_integer_widths,
-            nointptr_address_spaces,
-        };
-
         Ok(layout)
     }
 
     /// Augments the parsed floating-point layout specifications with any
     /// missing information based on the defaults for LLVM's data layout.
     fn float_specs_or_defaults(mut specs: Vec<FloatLayout>) -> Vec<FloatLayout> {
-        // Add the default for half-precision floats
-        if !specs.iter().any(|f| f.size == 16) {
-            specs.push(FloatLayout {
-                size:                16,
-                abi_alignment:       16,
-                preferred_alignment: 16,
-            });
-        }
+        let float_defaults = [
+            DEFAULT_FLOAT_16_LAYOUT,
+            DEFAULT_FLOAT_32_LAYOUT,
+            DEFAULT_FLOAT_64_LAYOUT,
+            DEFAULT_FLOAT_128_LAYOUT,
+        ];
 
-        // Add the default for full-precision floats
-        if !specs.iter().any(|f| f.size == 32) {
-            specs.push(FloatLayout {
-                size:                32,
-                abi_alignment:       32,
-                preferred_alignment: 32,
-            });
-        }
-
-        // Add the default for double-precision floats
-        if !specs.iter().any(|f| f.size == 64) {
-            specs.push(FloatLayout {
-                size:                64,
-                abi_alignment:       64,
-                preferred_alignment: 64,
-            });
-        }
-
-        // Add the default for quad-precision floats
-        if !specs.iter().any(|f| f.size == 128) {
-            specs.push(FloatLayout {
-                size:                128,
-                abi_alignment:       128,
-                preferred_alignment: 128,
-            });
+        for (size, abi_alignment, preferred_alignment) in float_defaults {
+            if !specs.iter().any(|f| f.size == size) {
+                specs.push(FloatLayout {
+                    size,
+                    abi_alignment,
+                    preferred_alignment,
+                });
+            }
         }
 
         specs.sort();
@@ -232,22 +208,16 @@ impl DataLayout {
     /// Augments the parsed vector layout specifications with any missing
     /// information based on the defaults for LLVM's data layout.
     fn vec_specs_or_defaults(mut specs: Vec<VectorLayout>) -> Vec<VectorLayout> {
-        // Add the default for 64-bit vectors
-        if !specs.iter().any(|v| v.size == 64) {
-            specs.push(VectorLayout {
-                size:                64,
-                abi_alignment:       64,
-                preferred_alignment: 64,
-            });
-        }
+        let vector_layouts = [DEFAULT_VECTOR_64_LAYOUT, DEFAULT_VECTOR_128_LAYOUT];
 
-        // Add the default for 128-bit vectors
-        if !specs.iter().any(|v| v.size == 128) {
-            specs.push(VectorLayout {
-                size:                128,
-                abi_alignment:       128,
-                preferred_alignment: 128,
-            });
+        for (size, abi_alignment, preferred_alignment) in vector_layouts {
+            if !specs.iter().any(|v| v.size == size) {
+                specs.push(VectorLayout {
+                    size,
+                    abi_alignment,
+                    preferred_alignment,
+                });
+            }
         }
 
         specs.sort();
@@ -257,49 +227,22 @@ impl DataLayout {
     /// Augments the parsed integer specifications with any missing information
     /// based on the defaults for LLVM's data layout.
     fn int_specs_or_defaults(mut specs: Vec<IntegerLayout>) -> Vec<IntegerLayout> {
-        // Add the default for i1 (bool)
-        if !specs.iter().any(|s| s.size == 1) {
-            specs.push(IntegerLayout {
-                size:                1,
-                abi_alignment:       8,
-                preferred_alignment: 8,
-            });
-        }
+        let integer_layouts = [
+            DEFAULT_INTEGER_1_LAYOUT,
+            DEFAULT_INTEGER_8_LAYOUT,
+            DEFAULT_INTEGER_16_LAYOUT,
+            DEFAULT_INTEGER_32_LAYOUT,
+            DEFAULT_INTEGER_64_LAYOUT,
+        ];
 
-        // Add the default for i8
-        if !specs.iter().any(|s| s.size == 8) {
-            specs.push(IntegerLayout {
-                size:                8,
-                abi_alignment:       8,
-                preferred_alignment: 8,
-            });
-        }
-
-        // Add the default for i16
-        if !specs.iter().any(|s| s.size == 16) {
-            specs.push(IntegerLayout {
-                size:                16,
-                abi_alignment:       16,
-                preferred_alignment: 16,
-            });
-        }
-
-        // Add the default for i32
-        if !specs.iter().any(|s| s.size == 32) {
-            specs.push(IntegerLayout {
-                size:                32,
-                abi_alignment:       32,
-                preferred_alignment: 32,
-            });
-        }
-
-        // Add the default for i64
-        if !specs.iter().any(|s| s.size == 64) {
-            specs.push(IntegerLayout {
-                size:                64,
-                abi_alignment:       32,
-                preferred_alignment: 64,
-            });
+        for (size, abi_alignment, preferred_alignment) in integer_layouts {
+            if !specs.iter().any(|i| i.size == size) {
+                specs.push(IntegerLayout {
+                    size,
+                    abi_alignment,
+                    preferred_alignment,
+                });
+            }
         }
 
         specs.sort();
@@ -309,14 +252,18 @@ impl DataLayout {
     /// Augments the parsed pointer specifications with any missing information
     /// based on the defaults for LLVM's data layout.
     fn pointer_specs_or_defaults(mut specs: Vec<PointerLayout>) -> Vec<PointerLayout> {
-        if !specs.iter().any(|l| l.address_space == 0) {
-            specs.push(PointerLayout {
-                address_space:       0,
-                size:                64,
-                abi_alignment:       64,
-                preferred_alignment: 64,
-                index_size:          64,
-            });
+        let pointer_layouts = [DEFAULT_POINTER_0_LAYOUT];
+
+        for (space, size, abi, pref, index) in pointer_layouts {
+            if !specs.iter().any(|l| l.address_space == space) {
+                specs.push(PointerLayout {
+                    address_space: space,
+                    size,
+                    abi_alignment: abi,
+                    preferred_alignment: pref,
+                    index_size: index,
+                });
+            }
         }
 
         specs.sort();
@@ -369,7 +316,9 @@ impl Endianness {
 /// A description of the mangling scheme used by this module.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Mangling {
-    /// The Windows COFF mangling scheme.
+    /// The Unix COFF mangling scheme that is still used by Windows' Portable
+    /// Executable format.
+    ///
     /// Private symbols get the usual prefix. Functions with `__stdcall`,
     /// `__fastcall`, and `__vectorcall` have custom mangling that appends
     /// `@N` where `N` is the number of bytes used to pass parameters. C++

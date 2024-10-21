@@ -1,7 +1,7 @@
 # `FlatLowered` Intermediate Representation
 
-The `FlatLowered` Intermediate Representation (`FLIR`) is an intermediate representation for the
-LLVM to Cairo project that is based on Cairo's `FlatLowered` but tailored for our use-case.
+The `FlatLowered` Object format (`FLO`) is an intermediate representation for the LLVM to Cairo
+project that is based on Cairo's `FlatLowered` but tailored for our use-case.
 
 In particular, it removes any dependency on the [Salsa](https://github.com/salsa-rs/salsa) database
 structures, as well as:

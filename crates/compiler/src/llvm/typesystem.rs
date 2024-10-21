@@ -43,42 +43,34 @@ use crate::constant::BYTE_SIZE;
 /// It is intended that this type is used as having value semantics, and not
 /// ever have a reference returned to it.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[allow(non_camel_case_types)] // To better match the LLVM internal convention
 pub enum LLVMType {
     /// The boolean type, represented inside LLVM by the `i1`
     /// [integer type](https://llvm.org/docs/LangRef.html#integer-type).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     bool,
 
     /// The 8-bit wide [integer type](https://llvm.org/docs/LangRef.html#integer-type).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     i8,
 
     /// The 16-bit wide [integer type](https://llvm.org/docs/LangRef.html#integer-type).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     i16,
 
     /// The 32-bit wide [integer type](https://llvm.org/docs/LangRef.html#integer-type).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     i32,
 
     /// The 64-bit wide [integer type](https://llvm.org/docs/LangRef.html#integer-type).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     i64,
 
     /// The 128-bit wide [integer type](https://llvm.org/docs/LangRef.html#integer-type).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     i128,
 
     /// The IEEE-754 `binary16` [floating point type](https://llvm.org/docs/LangRef.html#floating-point-types).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     half,
 
     /// The IEEE-754 `binary32` [floating point type](https://llvm.org/docs/LangRef.html#floating-point-types).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     float,
 
     /// The IEEE-754 `binary64` [floating point type](https://llvm.org/docs/LangRef.html#floating-point-types).
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     double,
 
     /// Used to specify locations in memory as described in the
@@ -87,12 +79,10 @@ pub enum LLVMType {
     /// Note that pointers in our use only support the base address space, and
     /// do not specify the corresponding pointee type as was available in
     /// earlier versions of LLVM.
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     ptr,
 
     /// A [type](https://llvm.org/docs/LangRef.html#void-type) that does not
     /// represent any value and has no size.
-    #[allow(non_camel_case_types)] // To better match the LLVM internal convention
     void,
 
     /// An [array](https://llvm.org/docs/LangRef.html#array-type) is a
@@ -103,7 +93,7 @@ pub enum LLVMType {
         count: usize,
 
         /// The type of elements in the array type.
-        ty: Box<LLVMType>,
+        typ: Box<LLVMType>,
     },
 
     /// A [structure](https://llvm.org/docs/LangRef.html#structure-type)
@@ -153,7 +143,7 @@ impl LLVMType {
     pub fn make_array(elem_count: usize, elem_type: LLVMType) -> Self {
         Self::Array {
             count: elem_count,
-            ty:    Box::new(elem_type),
+            typ:   Box::new(elem_type),
         }
     }
 
@@ -194,7 +184,7 @@ impl LLVMType {
 
     /// Returns `true` if `self` is a primitive type, and `false` otherwise.
     #[must_use]
-    pub fn is_prim(&self) -> bool {
+    pub fn is_primitive(&self) -> bool {
         matches!(
             self,
             Self::bool
@@ -214,7 +204,7 @@ impl LLVMType {
     /// Returns `true` if `self` is a compound type, and `false` otherwise.
     #[must_use]
     pub fn is_compound(&self) -> bool {
-        !self.is_prim()
+        !self.is_primitive()
     }
 
     /// Returns `true` if `self` is an integral type, and `false` otherwise.
@@ -254,7 +244,7 @@ impl Display for LLVMType {
             LLVMType::ptr => "ptr".to_string(),
             LLVMType::void => "void".to_string(),
             LLVMType::Metadata => "metadata".to_string(),
-            LLVMType::Array { count, ty } => {
+            LLVMType::Array { count, typ: ty } => {
                 let ty_str = ty.to_string();
                 format!("[{ty_str}; {count}]")
             }

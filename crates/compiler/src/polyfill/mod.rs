@@ -51,7 +51,11 @@
 //! unlikely that every single operation is beneficial to implement as a builtin
 //! or AIR instruction.
 
+pub mod mappings;
+
 use bimap::{BiHashMap, BiMap};
+
+use crate::polyfill::mappings::LLVM_UADD_WITH_OVERFLOW_I64;
 
 /// A bidirectional mapping from the builtin names for LLVM to the internal
 /// names for the corresponding polyfills.
@@ -67,7 +71,7 @@ use bimap::{BiHashMap, BiMap};
 #[derive(Clone, Debug, PartialEq)]
 pub struct PolyfillMap {
     /// A mapping from the LLVM-side names to the corresponding polyfill names.
-    mapping: BiHashMap<String, String>,
+    mapping: BiMap<String, String>,
 }
 
 impl PolyfillMap {
@@ -123,13 +127,14 @@ impl Default for PolyfillMap {
     /// Contains the default mapping from opcodes and builtins to the
     /// corresponding polyfill names.
     fn default() -> Self {
-        let mut map: BiMap<&str, &str> = BiMap::new();
-        map.insert(
-            "llvm.uadd.with.overflow.i64",
-            "__llvm_uadd_with_overflow_i64_i64",
-        );
+        let defaults = [LLVM_UADD_WITH_OVERFLOW_I64];
 
-        Self::new(map.into_iter().map(|(l, r)| (l.to_string(), r.to_string())).collect())
+        Self::new(
+            defaults
+                .into_iter()
+                .map(|(l, r)| (l.to_string(), r.to_string()))
+                .collect(),
+        )
     }
 }
 

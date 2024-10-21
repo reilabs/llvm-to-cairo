@@ -7,7 +7,7 @@ use std::path::Path;
 use inkwell::{memory_buffer::MemoryBuffer, support::LLVMString};
 
 /// A unified type for all the different ways that we support adding a module to
-/// the compiler's [`crate::source::SourceContext`].
+/// the compiler's [`crate::context::SourceContext`].
 pub struct SourceModule {
     /// The underlying representation of the module to be passed to LLVM.
     memory_buffer: MemoryBuffer,

@@ -5,6 +5,7 @@
 use crate::llvm::typesystem::LLVMType;
 
 pub mod data_layout;
+pub mod special_intrinsics;
 pub mod typesystem;
 
 /// The type of top-level entry that is encountered in the module.

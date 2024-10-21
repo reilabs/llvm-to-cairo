@@ -16,16 +16,20 @@ use inkwell::{
 use ltc_errors::compile::{Error, Result};
 
 use crate::{
-    llvm::{data_layout::DataLayout, typesystem::LLVMType, TopLevelEntryKind},
+    context::SourceContext,
+    llvm::{
+        data_layout::DataLayout,
+        special_intrinsics::SpecialIntrinsics,
+        typesystem::LLVMType,
+        TopLevelEntryKind,
+    },
     pass::{
-        data::{ConcretePassData, DynPassDataMap, PassDataOps},
+        data::{ConcretePassData, DynPassDataMap, DynPassReturnData, PassDataOps},
         ConcretePass,
-        DynamicPassReturnData,
         Pass,
         PassKey,
         PassOps,
     },
-    source::SourceContext,
 };
 
 /// Generates a map of the top-level structure of an LLVM module.
@@ -50,6 +54,8 @@ impl Default for BuildModuleMap {
     }
 }
 
+/// Constructors that provide ways to create an instance of the
+/// [`BuildModuleMap`] pass.
 impl BuildModuleMap {
     /// Creates a new instance of the module mapping pass.
     #[must_use]
@@ -76,6 +82,7 @@ impl BuildModuleMap {
     }
 }
 
+/// Functionality that the [`BuildModuleMap`] pass implements.
 impl BuildModuleMap {
     /// Generates a module map for the provided module in the source context,
     /// returning the module map if successful.
@@ -91,7 +98,7 @@ impl BuildModuleMap {
         // compilation step in the future.
         let data_layout = self.process_data_layout(module.get_data_layout().as_str().to_str()?)?;
 
-        // With our data layout obtained succesffully, we can build our module map and
+        // With our data layout obtained successfully, we can build our module map and
         // start adding top-level entries to it.
         let mut mod_map = ModuleMap::new(data_layout);
 
@@ -229,18 +236,15 @@ impl BuildModuleMap {
 }
 
 /// We need to be able to run this pass using the pass manager, so we are
-/// obliged to implement `PassOps` for it to make this possible.
+/// obligated to implement `PassOps` for it to make this possible.
 impl PassOps for BuildModuleMap {
     fn run(
         &mut self,
         context: SourceContext,
         _pass_data: &DynPassDataMap,
-    ) -> Result<DynamicPassReturnData> {
+    ) -> Result<DynPassReturnData> {
         let analysis_result = context.analyze_module(|module| self.map_module(module))?;
-        Ok(DynamicPassReturnData::new(
-            context,
-            Box::new(analysis_result),
-        ))
+        Ok(DynPassReturnData::new(context, Box::new(analysis_result)))
     }
 
     fn depends(&self) -> &[PassKey] {
@@ -313,7 +317,8 @@ impl ConcretePassData for ModuleMap {
     type Pass = BuildModuleMap;
 }
 
-/// Information about a function to be stored in the module map.
+/// The information necessary to describe the conventions and operations
+/// necessary to call a function.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FunctionInfo {
     /// The type of function entity that was encountered here.
@@ -332,7 +337,8 @@ pub struct FunctionInfo {
     pub visibility: GlobalVisibility,
 }
 
-/// Information about a global to be stored in the module map.
+/// The information necessary to describe the conventions and operations
+/// necessary to access a global.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GlobalInfo {
     /// The type of global entity that was encountered here.
@@ -357,99 +363,206 @@ pub struct GlobalInfo {
     pub is_initialized: bool,
 }
 
-/// A registry of LLVM intrinsic functions that need to be handled specially.
-///
-/// # Avoiding an Issue in Inkwell
-///
-/// Unfortunately [`inkwell`] does not deal well with `metadata`-typed function
-/// arguments, despite them being valid argument types for function-typed values
-/// in LLVM IR. For now, we handle them by delegating to known signatures for
-/// these functions, rather than trying to introspect the functions themselves.
-///
-/// See [this issue](https://github.com/TheDan64/inkwell/issues/546) for more
-/// information.
-#[derive(Clone, Debug, PartialEq)]
-pub struct SpecialIntrinsics {
-    /// The intrinsics that need to be handled specially.
-    intrinsics: HashMap<String, FunctionInfo>,
-}
+#[cfg(test)]
+mod test {
+    use std::path::Path;
 
-impl SpecialIntrinsics {
-    /// Constructs the special intrinsics mapping, providing the appropriate
-    /// [`FunctionInfo`] metadata for the intrinsics that we insert.
-    #[must_use]
-    pub fn new() -> Self {
-        let mut intrinsics = HashMap::new();
-        intrinsics.insert(
-            "llvm.dbg.declare".to_string(),
-            FunctionInfo {
-                kind:       TopLevelEntryKind::Declaration,
-                intrinsic:  true,
-                typ:        LLVMType::make_function(
-                    LLVMType::void,
-                    &[LLVMType::Metadata, LLVMType::Metadata, LLVMType::Metadata],
-                ),
-                linkage:    Linkage::External,
-                visibility: GlobalVisibility::Default,
-            },
-        );
-        intrinsics.insert(
-            "llvm.dbg.value".to_string(),
-            FunctionInfo {
-                kind:       TopLevelEntryKind::Declaration,
-                intrinsic:  true,
-                typ:        LLVMType::make_function(
-                    LLVMType::void,
-                    &[LLVMType::Metadata, LLVMType::Metadata, LLVMType::Metadata],
-                ),
-                linkage:    Linkage::External,
-                visibility: GlobalVisibility::Default,
-            },
-        );
-        intrinsics.insert(
-            "llvm.dbg.assign".to_string(),
-            FunctionInfo {
-                kind:       TopLevelEntryKind::Declaration,
-                intrinsic:  true,
-                typ:        LLVMType::make_function(
-                    LLVMType::void,
-                    &[
-                        LLVMType::Metadata,
-                        LLVMType::Metadata,
-                        LLVMType::Metadata,
-                        LLVMType::Metadata,
-                        LLVMType::Metadata,
-                    ],
-                ),
-                linkage:    Linkage::External,
-                visibility: GlobalVisibility::Default,
-            },
-        );
+    use inkwell::{module::Linkage, GlobalVisibility};
 
-        Self { intrinsics }
+    use crate::{
+        context::SourceContext,
+        llvm::{data_layout::DataLayout, typesystem::LLVMType, TopLevelEntryKind},
+        pass::{analysis::module_map::BuildModuleMap, data::DynPassDataMap, ConcretePass, PassOps},
+    };
+
+    /// A utility function to make it easy to load the testing context in all
+    /// the tests.
+    fn get_text_context() -> SourceContext {
+        SourceContext::create(Path::new(r"input/add.ll"))
+            .expect("Unable to construct testing source context")
     }
 
-    /// Gets the function information for `function_name` if it exists, and
-    /// returns [`None`] otherwise.
-    #[must_use]
-    pub fn info_for(&self, function_name: &str) -> Option<FunctionInfo> {
-        self.intrinsics.get(function_name).cloned()
+    #[test]
+    fn returns_correct_data_type() -> anyhow::Result<()> {
+        // Setup
+        let ctx = get_text_context();
+        let data = DynPassDataMap::new();
+        let mut pass = BuildModuleMap::new_dyn();
+        let dyn_return_data = pass.run(ctx, &data)?;
+
+        // We should be able to get the pass data as the correct associated type.
+        assert!(
+            dyn_return_data
+                .data
+                .view_as::<<BuildModuleMap as ConcretePass>::Data>()
+                .is_some()
+        );
+
+        Ok(())
     }
 
-    /// Gets the function information for `function_name` if it exists.
-    ///
-    /// # Panics
-    ///
-    /// If `function_name` does not exist in the special intrinsics container.
-    #[must_use]
-    pub fn info_for_unchecked(&self, function_name: &str) -> FunctionInfo {
-        self.info_for(function_name)
-            .unwrap_or_else(|| panic!("No information found for {function_name}"))
-    }
-}
+    #[test]
+    fn discovers_correct_data_layout() -> anyhow::Result<()> {
+        // Setup
+        let ctx = get_text_context();
+        let data = DynPassDataMap::new();
+        let mut pass = BuildModuleMap::new_dyn();
 
-impl Default for SpecialIntrinsics {
-    fn default() -> Self {
-        Self::new()
+        let dyn_return_data = pass.run(ctx, &data)?;
+        let map = dyn_return_data
+            .data
+            .view_as::<<BuildModuleMap as ConcretePass>::Data>()
+            .unwrap();
+
+        // The data layout should have been picked up correctly from the module, and we
+        // know that parsing works, so we check equality
+        let data_layout = &map.data_layout;
+        let expected_data_layout =
+            DataLayout::new("e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128")?;
+        assert_eq!(data_layout, &expected_data_layout);
+
+        Ok(())
+    }
+
+    #[test]
+    fn discovers_correct_globals() -> anyhow::Result<()> {
+        let ctx = get_text_context();
+        let data = DynPassDataMap::new();
+        let mut pass = BuildModuleMap::new_dyn();
+
+        let dyn_return_data = pass.run(ctx, &data)?;
+        let map = dyn_return_data
+            .data
+            .view_as::<<BuildModuleMap as ConcretePass>::Data>()
+            .unwrap();
+        let globals = &map.globals;
+
+        // Functions, though technically globals, should not be seen
+        assert!(
+            !globals.contains_key(&"_ZN19ltc_rust_test_input3add17h828e50e9267cb510E".to_string())
+        );
+        assert!(!globals.contains_key(&"llvm.dbg.declare".to_string()));
+        assert!(!globals.contains_key(&"llvm.uadd.with.overflow.i64".to_string()));
+        assert!(
+            !globals.contains_key(
+                &"_ZN4core9panicking11panic_const24panic_const_add_overflow17he7771b1d81fa091aE"
+                    .to_string()
+            )
+        );
+
+        // The first global
+        assert!(globals.contains_key(&"alloc_4190527422e5cc48a15bd1cb4f38f425".to_string()));
+        let global_1 = globals
+            .get(&"alloc_4190527422e5cc48a15bd1cb4f38f425".to_string())
+            .unwrap();
+        assert!(global_1.is_initialized);
+        assert_eq!(global_1.visibility, GlobalVisibility::Default);
+        assert_eq!(global_1.alignment, 1);
+        assert!(global_1.is_const);
+        assert_eq!(global_1.linkage, Linkage::Private);
+        assert_eq!(global_1.kind, TopLevelEntryKind::Definition);
+        assert_eq!(
+            global_1.typ,
+            LLVMType::make_struct(true, &[LLVMType::make_array(33, LLVMType::i8)])
+        );
+
+        // The second global
+        assert!(globals.contains_key(&"alloc_5b4544c775a23c08ca70c48dd7be27fc".to_string()));
+        let global_2 = globals
+            .get(&"alloc_5b4544c775a23c08ca70c48dd7be27fc".to_string())
+            .unwrap();
+        assert!(global_2.is_initialized);
+        assert_eq!(global_2.visibility, GlobalVisibility::Default);
+        assert_eq!(global_2.alignment, 8);
+        assert!(global_2.is_const);
+        assert_eq!(global_2.linkage, Linkage::Private);
+        assert_eq!(global_2.kind, TopLevelEntryKind::Definition);
+        assert_eq!(
+            global_2.typ,
+            LLVMType::make_struct(
+                true,
+                &[LLVMType::ptr, LLVMType::make_array(16, LLVMType::i8)]
+            )
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn discovers_correct_functions() -> anyhow::Result<()> {
+        let ctx = get_text_context();
+        let data = DynPassDataMap::new();
+        let mut pass = BuildModuleMap::new_dyn();
+
+        let dyn_return_data = pass.run(ctx, &data)?;
+        let map = dyn_return_data
+            .data
+            .view_as::<<BuildModuleMap as ConcretePass>::Data>()
+            .unwrap();
+        let functions = &map.functions;
+
+        // First we check that the globals have avoided somehow being recorded as
+        // functions.
+        assert!(!functions.contains_key(&"alloc_4190527422e5cc48a15bd1cb4f38f425".to_string()));
+        assert!(!functions.contains_key(&"alloc_5b4544c775a23c08ca70c48dd7be27fc".to_string()));
+
+        // _ZN19ltc_rust_test_input3add17h828e50e9267cb510E
+        let rust_test_input = functions
+            .get(&"_ZN19ltc_rust_test_input3add17h828e50e9267cb510E".to_string())
+            .unwrap();
+        assert!(!rust_test_input.intrinsic);
+        assert_eq!(rust_test_input.kind, TopLevelEntryKind::Definition);
+        assert_eq!(rust_test_input.linkage, Linkage::External);
+        assert_eq!(rust_test_input.visibility, GlobalVisibility::Default);
+        assert_eq!(
+            rust_test_input.typ,
+            LLVMType::make_function(LLVMType::i64, &[LLVMType::i64, LLVMType::i64])
+        );
+
+        // llvm.dbg.declare
+        let rust_test_input = functions.get(&"llvm.dbg.declare".to_string()).unwrap();
+        assert!(rust_test_input.intrinsic);
+        assert_eq!(rust_test_input.kind, TopLevelEntryKind::Declaration);
+        assert_eq!(rust_test_input.linkage, Linkage::External);
+        assert_eq!(rust_test_input.visibility, GlobalVisibility::Default);
+        assert_eq!(
+            rust_test_input.typ,
+            LLVMType::make_function(
+                LLVMType::void,
+                &[LLVMType::Metadata, LLVMType::Metadata, LLVMType::Metadata]
+            )
+        );
+
+        // llvm.uadd.with.overflow.i64
+        let rust_test_input = functions.get(&"llvm.uadd.with.overflow.i64".to_string()).unwrap();
+        assert!(rust_test_input.intrinsic);
+        assert_eq!(rust_test_input.kind, TopLevelEntryKind::Declaration);
+        assert_eq!(rust_test_input.linkage, Linkage::External);
+        assert_eq!(rust_test_input.visibility, GlobalVisibility::Default);
+        assert_eq!(
+            rust_test_input.typ,
+            LLVMType::make_function(
+                LLVMType::make_struct(false, &[LLVMType::i64, LLVMType::bool]),
+                &[LLVMType::i64, LLVMType::i64]
+            )
+        );
+
+        // _ZN4core9panicking11panic_const24panic_const_add_overflow17he7771b1d81fa091aE
+        let rust_test_input = functions
+            .get(
+                &"_ZN4core9panicking11panic_const24panic_const_add_overflow17he7771b1d81fa091aE"
+                    .to_string(),
+            )
+            .unwrap();
+        assert!(!rust_test_input.intrinsic);
+        assert_eq!(rust_test_input.kind, TopLevelEntryKind::Declaration);
+        assert_eq!(rust_test_input.linkage, Linkage::External);
+        assert_eq!(rust_test_input.visibility, GlobalVisibility::Default);
+        assert_eq!(
+            rust_test_input.typ,
+            LLVMType::make_function(LLVMType::void, &[LLVMType::ptr])
+        );
+
+        Ok(())
     }
 }

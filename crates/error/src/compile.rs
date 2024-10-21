@@ -13,6 +13,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// the Cairo IR.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// A generic compilation failure with a string message, used as a catch-all
+    /// for cases that are uncommon enough to not have specific error variants
+    /// for them.
+    #[error("Compilation failed: {_0}")]
+    CompilationFailure(String),
+
     /// An error that occurs when trying to convert from the LLVM string
     /// representation used by Inkwell to the UTF-8 string representation used
     /// by Rust.

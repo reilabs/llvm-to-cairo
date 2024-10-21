@@ -45,20 +45,22 @@
 #![allow(clippy::multiple_crate_versions)] // Enforced by our dependencies
 
 pub mod constant;
+pub mod context;
 pub mod llvm;
 pub mod pass;
 pub mod polyfill;
-pub mod source;
 
-use ltc_errors::compile::Result;
+use ltc_errors::compile::{Error, Result};
+use ltc_flo::FlatLoweredObject;
 
 use crate::{
+    context::SourceContext,
     pass::{data::DynPassDataMap, PassManager, PassManagerReturnData},
     polyfill::PolyfillMap,
-    source::SourceContext,
 };
 
-/// Handles the compilation of LLVM IR to Cairo's internal `FlatLowered` IR.
+/// Handles the compilation of LLVM IR to our [`FlatLoweredObject`] object
+/// format.
 ///
 /// In the context of LLVM to Cairo, compilation refers to the process of
 /// translating from [LLVM IR](https://llvm.org/docs/LangRef.html) to our
@@ -96,16 +98,18 @@ use crate::{
 ///
 /// While we definitely want the benefits of Sierra—particularly model checking
 /// for the underlying machine, and the gas monitoring—we do not want to perform
-/// all the necessary bookkeeping to make Sierra work on our own. By targeting
-/// `FlatLowered` instead, we gain the benefits of the _already existing_
-/// [`sierragen`](https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-sierra-generator/src/lib.rs)
+/// all the necessary bookkeeping to make Sierra work on our own at the current
+/// time. By targeting `FlatLowered` instead, we gain the benefits of the
+/// _already existing_ [`sierragen`](https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-sierra-generator/src/lib.rs)
 /// functionality, which ingests `FlatLowered` and handles the required Sierra
-/// bookkeeping for us.
+/// bookkeeping for us, while also being able to iterate and design faster.
 ///
 /// While this does give us less control—as we rely on the existing
 /// translation—the benefits of not having to manually perform this additional
-/// work far outweighs that downside. If we _do_ need any additional control, we
-/// can always modify this process at a later date.
+/// work far outweighs that downside.
+///
+/// We fully expect to modify the process in the future to target `Sierra`
+/// directly, giving us more control as we need it.
 #[allow(dead_code)]
 pub struct Compiler {
     /// The source context, containing references to the LLVM module to be
@@ -125,7 +129,7 @@ impl Compiler {
     /// describing the LLVM module to compile, the `passes` to run, and the
     /// `polyfill_map` from LLVM names to polyfill names.
     #[must_use]
-    fn new(context: SourceContext, passes: PassManager, polyfill_map: PolyfillMap) -> Self {
+    pub fn new(context: SourceContext, passes: PassManager, polyfill_map: PolyfillMap) -> Self {
         Self {
             context,
             passes,
@@ -145,12 +149,12 @@ impl Compiler {
     pub fn run(mut self) -> Result<CompilationResult> {
         let PassManagerReturnData {
             context: _context,
-            data,
+            data: _data,
         } = self.passes.run(self.context)?;
 
-        // TODO (#24) Actually compile to FLIR.
-
-        Ok(CompilationResult::new(data))
+        Err(Error::CompilationFailure(
+            "Compilation is not yet implemented".to_string(),
+        ))
     }
 }
 
@@ -162,7 +166,7 @@ pub struct CompilationResult {
     pub pass_results: DynPassDataMap,
 
     /// The `FLO` module that results from compilation.
-    pub result_module: (),
+    pub result_module: FlatLoweredObject,
 }
 
 impl CompilationResult {
@@ -170,7 +174,8 @@ impl CompilationResult {
     /// and also containing the final output of any compiler passes.
     #[must_use]
     pub fn new(pass_results: DynPassDataMap) -> Self {
-        let result_module = ();
+        // TODO (#24) Actually compile to FLO.
+        let result_module = FlatLoweredObject::new("");
         Self {
             pass_results,
             result_module,
@@ -197,7 +202,13 @@ impl CompilerBuilder {
     /// Creates a new compiler builder wrapping the provided context.
     ///
     /// The compiler's passes configuration and polyfill configuration will be
-    /// left as default.
+    /// left as default unless specified otherwise by calling
+    /// [`Self::with_passes`] and [`Self::with_polyfills`] respectively.
+    ///
+    /// # API Style
+    ///
+    /// Please note that the API for the builder consumes `self` and is hence
+    /// designed to have calls chained in the "fluent" API style.
     #[must_use]
     pub fn new(context: SourceContext) -> Self {
         let passes = None;
@@ -210,6 +221,11 @@ impl CompilerBuilder {
     }
 
     /// Specifies the pass configuration for the compiler.
+    ///
+    /// # API Style
+    ///
+    /// Please note that the API for the builder consumes `self` and is hence
+    /// designed to have calls chained in the "fluent" API style.
     #[must_use]
     pub fn with_passes(mut self, pass_manager: PassManager) -> Self {
         self.passes = Some(pass_manager);
@@ -217,6 +233,11 @@ impl CompilerBuilder {
     }
 
     /// Specifies the polyfill configuration for the compiler.
+    ///
+    /// # API Style
+    ///
+    /// Please note that the API for the builder consumes `self` and is hence
+    /// designed to have calls chained in the "fluent" API style.
     #[must_use]
     pub fn with_polyfills(mut self, polyfill_map: PolyfillMap) -> Self {
         self.polyfill_map = Some(polyfill_map);
@@ -224,6 +245,11 @@ impl CompilerBuilder {
     }
 
     /// Builds a compiler from the specified configuration.
+    ///
+    /// # API Style
+    ///
+    /// Please note that the API for the builder consumes `self` and is hence
+    /// designed to have calls chained in the "fluent" API style.
     #[must_use]
     pub fn build(self) -> Compiler {
         Compiler::new(
@@ -238,16 +264,15 @@ impl CompilerBuilder {
 mod test {
     use std::path::Path;
 
-    use crate::{source::SourceContext, CompilerBuilder};
+    use crate::{context::SourceContext, CompilerBuilder};
 
     #[test]
-    fn run() -> anyhow::Result<()> {
+    fn compiler_runs_successfully() -> anyhow::Result<()> {
         let test_input = r"input/add.ll";
         let ctx = SourceContext::create(Path::new(test_input))?;
 
         let compiler = CompilerBuilder::new(ctx).build();
-        let result = compiler.run()?;
-        assert_eq!(result.result_module, ());
+        assert!(compiler.run().is_err());
 
         Ok(())
     }
