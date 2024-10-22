@@ -74,6 +74,12 @@
           "dscl . -read ~ UserShell | cut -d ' ' -f2 | tr -d '\n'"
         else
           "getent passwd $USER | cut -d ':' -f7 | tr -d '\n'";
+
+        # The packages that we want to make available in the dev shells.
+        devshellPackages = [
+          pkgs.nodejs_22
+          pkgs.cargo-deny
+        ];
       in {
         packages = {
           inherit all;
@@ -84,10 +90,7 @@
         devShells.default = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
           inputsFrom = lib.attrValues llvmToCairo;
-
-          packages = [
-            pkgs.nodejs_22
-          ];
+          packages = devshellPackages;
 
           shellHook = ''
           exec $(${getUserShellCommand})
@@ -98,10 +101,7 @@
         devShells.ci = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
           inputsFrom = lib.attrValues llvmToCairo;
-
-          packages = [
-            pkgs.nodejs_22
-          ];
+          packages = devshellPackages;
         };
       }
     );
