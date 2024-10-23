@@ -21,8 +21,8 @@
   # Attrsets in this will add additional arguments to craneLib.buildPackage for the
   # crate with the matching package name.
   crateSpecificArgs = {
-    ltc-cli = {
-      meta.mainProgram = "ltc";
+    hieratika = {
+      meta.mainProgram = "hieratika";
     };
   };
 
@@ -53,7 +53,7 @@
   # separately, and thus only build them once for the whole workspace.
   workspaceDeps = craneLib.buildDepsOnly (commonArgs // {
     # Workspaces don't have names, so we'll give it the repo name for the dependencies.
-    pname = "llvm-to-cairo-deps";
+    pname = "hieratika-deps";
     inherit version;
   });
 

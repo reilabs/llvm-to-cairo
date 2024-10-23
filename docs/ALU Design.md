@@ -1,7 +1,7 @@
 # ALU Design
 
 This document describes the research done for
-[#27 Design ALU](https://github.com/reilabs/llvm-to-cairo/issues/27).
+[#27 Design ALU](https://github.com/reilabs/hieratika/issues/27).
 
 The first part, [**Research**](#Research), describes selected features of LLVM IR, Rust and Cairo
 (both the virtual machine and the programming language), that impact the way we must handle
@@ -58,7 +58,7 @@ behavior, i.e. no (un)signed overflow. However, if the operands cause the overfl
 returns a poison, which is an equivalent of a value indicating undefined behavior that can propagate
 throughout the program.
 
-[According to the experiment](https://github.com/reilabs/llvm-to-cairo/issues/27#issuecomment-2397645979),
+[According to the experiment](https://github.com/reilabs/hieratika/issues/27#issuecomment-2397645979),
 LLVM does not seem to emit such instructions from the Rust code, so the initial version of ALU will
 not handle `nuw`, `nsw` or other keywords in any specific way.
 
@@ -76,7 +76,7 @@ the `call` instruction. The intrinsic is defined in the LLVM codebase and its so
 make it into the `.ll` file produced out of the adding operation in Rust code.
 
 The LLVM Language Reference Manual has an extensive list of intrinsics. Here's the example of
-[`llvm.uadd.with.overflow.<ty>`](https://llvm.org/docs/LangRef.html#llvm-uadd-with-overflow-intrinsics).
+[ `llvm.uadd.with.overflow.<ty>`](https://llvm.org/docs/LangRef.html#llvm-uadd-with-overflow-intrinsics).
 
 ### Data Types
 
@@ -212,14 +212,14 @@ two general purpose registers or the result of the last operation stored in anot
 a flag register, where specific bits signal certain conditions (e.g. the result being zero or an
 integer overflow).
 
-The LLVM-to-Cairo infrastructure needs to deliver pieces of code translating generic LLVM arithmetic
+The Hieratika infrastructure needs to deliver pieces of code translating generic LLVM arithmetic
 operations to their counterparts specific to the Cairo VM architecture. This translation will be
-done on the code level, during one of the LLVM-to-Cairo pipeline stages. Namely, this will be not
+done on the code level, during one of the Hieratika pipeline stages. Namely, this will be not
 runtime translation, but rather a compilation time one. Therefore, there is no global state to be
 managed during that time.
 
 Additionally, it has been noticed
-[in one of the experiments](https://github.com/reilabs/llvm-to-cairo/issues/27#issuecomment-2391893640),
+[in one of the experiments](https://github.com/reilabs/hieratika/issues/27#issuecomment-2391893640),
 that LLVM IR follows the same principle of not managing the internal state of arithmetic operations.
 This is either done by:
 
@@ -252,7 +252,7 @@ implement the desired behavior, e.g. to make sure we indicate overflow on obviou
 
 The ALU will be implemented as source code written in
 [Cairo](https://book.cairo-lang.org/title-page.html). During the
-[LLVM-to-Cairo compilation pipeline](https://www.notion.so/reilabs/System-Architecture-113d2f80c874802b8480d997347933a2?pvs=4)
+[Hieratika compilation pipeline](https://www.notion.so/reilabs/System-Architecture-113d2f80c874802b8480d997347933a2?pvs=4)
 the polyfills implementations will be translated to `FlatLowered` objects and then extracted to
 `.flo` files. Then, on the linking phase, all the `.flo` files (those created from arithmetic
 operations implementations and those from the LLVM IR) will be linked together.

@@ -8,12 +8,12 @@
 
 use std::collections::HashMap;
 
+use hieratika_errors::compile::{Error, Result};
 use inkwell::{
     module::{Linkage, Module},
     values::{FunctionValue, GlobalValue},
     GlobalVisibility,
 };
-use ltc_errors::compile::{Error, Result};
 
 use crate::{
     context::SourceContext,
@@ -439,7 +439,9 @@ mod test {
 
         // Functions, though technically globals, should not be seen
         assert!(
-            !globals.contains_key(&"_ZN19ltc_rust_test_input3add17h828e50e9267cb510E".to_string())
+            !globals.contains_key(
+                &"_ZN19hieratika_rust_test_input3add17h828e50e9267cb510E".to_string()
+            )
         );
         assert!(!globals.contains_key(&"llvm.dbg.declare".to_string()));
         assert!(!globals.contains_key(&"llvm.uadd.with.overflow.i64".to_string()));
@@ -506,9 +508,9 @@ mod test {
         assert!(!functions.contains_key(&"alloc_4190527422e5cc48a15bd1cb4f38f425".to_string()));
         assert!(!functions.contains_key(&"alloc_5b4544c775a23c08ca70c48dd7be27fc".to_string()));
 
-        // _ZN19ltc_rust_test_input3add17h828e50e9267cb510E
+        // _ZN19hieratika_rust_test_input3add17h828e50e9267cb510E
         let rust_test_input = functions
-            .get(&"_ZN19ltc_rust_test_input3add17h828e50e9267cb510E".to_string())
+            .get(&"_ZN19hieratika_rust_test_input3add17h828e50e9267cb510E".to_string())
             .unwrap();
         assert!(!rust_test_input.intrinsic);
         assert_eq!(rust_test_input.kind, TopLevelEntryKind::Definition);

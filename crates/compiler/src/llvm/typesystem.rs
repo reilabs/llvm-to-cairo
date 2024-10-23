@@ -3,6 +3,7 @@
 
 use std::fmt::{Display, Formatter};
 
+use hieratika_errors::{compile, compile::Error};
 use inkwell::types::{
     AnyTypeEnum,
     ArrayType,
@@ -16,7 +17,6 @@ use inkwell::types::{
     VoidType,
 };
 use itertools::Itertools;
-use ltc_errors::{compile, compile::Error};
 
 use crate::constant::BYTE_SIZE;
 

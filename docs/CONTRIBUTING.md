@@ -1,7 +1,7 @@
 # Contributing
 
-This document exists as a brief introduction to how you can contribute to the LLVM to Cairo project.
-It includes a guide to [getting started](#setting-up-for-development) and
+This document exists as a brief introduction to how you can contribute to the Hieratika project. It
+includes a guide to [getting started](#setting-up-for-development) and
 [contributing to `main`](#getting-your-work-on-main).
 
 This repository is written in [Rust](https://www.rust-lang.org), a high-performance and low-level
@@ -29,17 +29,17 @@ We assume that you are either running on linux or macOS at this stage.
 2. Clone the repository. If you don't want to contribute directly you can use HTTPS clones:
 
    ```shell
-   git clone https://github.com/reilabs/llvm-to-cairo
+   git clone https://github.com/reilabs/hieratika
    ```
 
    If you _do_ want to contribute directly to the tree, we recommend cloning over SSH:
 
    ```shell
-   git clone git@github.com:reilabs/llvm-to-cairo.git
+   git clone git@github.com:reilabs/hieratika.git
    ```
 
-3. Enter the cloned directory (`cd llvm-to-cairo`) and launch a development shell using
-   `nix develop`. This will launch into your default shell, but you can override this by running
+3. Enter the cloned directory (`cd hieratika`) and launch a development shell using `nix develop`.
+   This will launch into your default shell, but you can override this by running
    `nix develop ".#ci" --command <your-command>` to use the CI dev shell instead.
 
 4. Within this shell you are able to run Cargo commands such as `cargo build`, which will build the
@@ -86,8 +86,8 @@ seems to have issues with these.
 ## Getting Your Work on `main`
 
 For contributions this repository works on a
-[Pull Request](https://github.com/reilabs/llvm-to-cairo/pulls) and subsequent review model,
-supported by CI to check that things avoid being broken. The process works as follows:
+[Pull Request](https://github.com/reilabs/hieratika/pulls) and subsequent review model, supported by
+CI to check that things avoid being broken. The process works as follows:
 
 1. If necessary, you fork the repository, but if you have access please create a branch.
 2. You make your changes on that branch.

@@ -1,5 +1,5 @@
 [package]
-name = "ltc-driver"
+name = "hieratika-driver"
 version.workspace = true
 homepage.workspace = true
 repository.workspace = true

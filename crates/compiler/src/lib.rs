@@ -50,8 +50,8 @@ pub mod llvm;
 pub mod pass;
 pub mod polyfill;
 
-use ltc_errors::compile::{Error, Result};
-use ltc_flo::FlatLoweredObject;
+use hieratika_errors::compile::{Error, Result};
+use hieratika_flo::FlatLoweredObject;
 
 use crate::{
     context::SourceContext,
@@ -62,8 +62,8 @@ use crate::{
 /// Handles the compilation of LLVM IR to our [`FlatLoweredObject`] object
 /// format.
 ///
-/// In the context of LLVM to Cairo, compilation refers to the process of
-/// translating from [LLVM IR](https://llvm.org/docs/LangRef.html) to our
+/// In the context of the Hieratika project, compilation refers to the process
+/// of translating from [LLVM IR](https://llvm.org/docs/LangRef.html) to our
 /// internal `FLO` object file format.
 ///
 /// LLVM IR is designed around a virtual processor model that is expected to
@@ -144,8 +144,8 @@ impl Compiler {
     ///
     /// # Errors
     ///
-    /// - [`ltc_errors::compile::Error`] if the compilation process fails for
-    ///   any reason.
+    /// - [`hieratika_errors::compile::Error`] if the compilation process fails
+    ///   for any reason.
     pub fn run(mut self) -> Result<CompilationResult> {
         let PassManagerReturnData {
             context: _context,

@@ -102,7 +102,7 @@ impl PolyfillMap {
     /// fully resolved before calling this.
     ///
     /// ```
-    /// use ltc_compiler::polyfill::PolyfillMap;
+    /// use hieratika_compiler::polyfill::PolyfillMap;
     ///
     /// let opcode_name = "add";
     /// let arg_types = vec!["i8", "i64"];

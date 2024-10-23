@@ -1,8 +1,14 @@
-# LLVM on CairoVM
+# Hieratika: Compiling LLVM to CairoVM
+
+> **hieratiká /ˌhaɪ(ə)ˈɹætɪka/**, _adjective_
+>
+> Of or pertaining to the cursive writing system that developed alongside the hieroglyphic system as
+> its handwritten counterpart for every-day use. It took the "priestly", domain-specific
+> hieroglyphics and repurposed them for non-domain-specific expression.
 
 This repository contains the efforts to enable compilation of LLVM bytecode to run on top of the
-[CairoVM](https://github.com/lambdaclass/cairo-vm) and [Starknet](https://www.starknet.io). The
-goals of this project are threefold:
+[CairoVM](https://github.com/lambdaclass/cairo-vm) and hence [Starknet](https://www.starknet.io).
+The goals of this project are threefold:
 
 1. **Provable Rust Execution:** To provide the ability to prove the execution of LLVM bytecode using
    Starknet's proving infrastructure, thereby allowing verification of said execution.
