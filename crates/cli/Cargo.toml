@@ -1,12 +1,12 @@
 [package]
-name = "ltc-cli"
+name = "hieratika-cli"
 version.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license-file.workspace = true
 
 authors.workspace = true
-description = "The CLI for working with the LLVM to Cairo compilation process."
+description = "The CLI to allow users to interact with the Hieratika compilation process."
 keywords.workspace = true
 categories.workspace = true
 
@@ -16,10 +16,10 @@ rust-version.workspace = true
 [dependencies]
 ariadne.workspace = true
 clap.workspace = true
+hieratika-compiler.workspace = true
 itertools.workspace = true
-ltc-compiler.workspace = true
 tracing.workspace = true
 
 [[bin]]
-name = "ltc"         # Named for "LLVM To Cairo"
+name = "hieratika"
 path = "src/main.rs"

@@ -30,7 +30,7 @@
 //! The implementations in this file are deliberately left incomplete, and exist
 //! only as skeletons to serve the purposes of correctly designing the compiler
 //! state. A proper implementation will take place later in the project, as
-//! tracked by [#56](https://github.com/reilabs/llvm-to-cairo/issues/56).
+//! tracked by [#56](https://github.com/reilabs/hieratika/issues/56).
 
 pub mod analysis;
 pub mod data;
@@ -41,7 +41,7 @@ use std::{
 };
 
 use downcast_rs::Downcast;
-use ltc_errors::compile::{Error, Result};
+use hieratika_errors::compile::{Error, Result};
 
 use crate::{
     context::SourceContext,

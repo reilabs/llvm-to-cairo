@@ -6,9 +6,9 @@ target triple = "aarch64-unknown-none"
 @alloc_4190527422e5cc48a15bd1cb4f38f425 = private unnamed_addr constant <{ [33 x i8] }> <{ [33 x i8] c"crates/rust-test-input/src/lib.rs" }>, align 1
 @alloc_5b4544c775a23c08ca70c48dd7be27fc = private unnamed_addr constant <{ ptr, [16 x i8] }> <{ ptr @alloc_4190527422e5cc48a15bd1cb4f38f425, [16 x i8] c"!\00\00\00\00\00\00\00\05\00\00\00\05\00\00\00" }>, align 8
 
-; ltc_rust_test_input::add
+; hieratika_rust_test_input::add
 ; Function Attrs: noredzone nounwind
-define dso_local i64 @_ZN19ltc_rust_test_input3add17h828e50e9267cb510E(i64 %left, i64 %right) unnamed_addr #0 !dbg !5 {
+define dso_local i64 @_ZN19hieratika_rust_test_input3add17h828e50e9267cb510E(i64 %left, i64 %right) unnamed_addr #0 !dbg !5 {
 start:
   %right.dbg.spill = alloca [8 x i8], align 8
   %left.dbg.spill = alloca [8 x i8], align 8
@@ -51,12 +51,12 @@ attributes #3 = { noreturn nounwind }
 
 !0 = !{!"rustc version 1.81.0 (eeb90cda1 2024-09-04)"}
 !1 = distinct !DICompileUnit(language: DW_LANG_Rust, file: !2, producer: "clang LLVM (rustc version 1.81.0 (eeb90cda1 2024-09-04))", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None)
-!2 = !DIFile(filename: "crates/rust-test-input/src/lib.rs/@/9ox3ykpp0gbrqxqlz7ajwa9w6", directory: "/Users/starfire/Development/reilabs/starkware/llvm-to-cairo")
+!2 = !DIFile(filename: "crates/rust-test-input/src/lib.rs/@/9ox3ykpp0gbrqxqlz7ajwa9w6", directory: "/Users/starfire/Development/reilabs/starkware/hieratika")
 !3 = !{i32 2, !"Dwarf Version", i32 4}
 !4 = !{i32 2, !"Debug Info Version", i32 3}
-!5 = distinct !DISubprogram(name: "add", linkageName: "_ZN19ltc_rust_test_input3add17h828e50e9267cb510E", scope: !7, file: !6, line: 4, type: !8, scopeLine: 4, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !1, templateParams: !14, retainedNodes: !11)
-!6 = !DIFile(filename: "crates/rust-test-input/src/lib.rs", directory: "/Users/starfire/Development/reilabs/starkware/llvm-to-cairo", checksumkind: CSK_MD5, checksum: "178b5b568f49bd1e17834a7529756af1")
-!7 = !DINamespace(name: "ltc_rust_test_input", scope: null)
+!5 = distinct !DISubprogram(name: "add", linkageName: "_ZN19hieratika_rust_test_input3add17h828e50e9267cb510E", scope: !7, file: !6, line: 4, type: !8, scopeLine: 4, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !1, templateParams: !14, retainedNodes: !11)
+!6 = !DIFile(filename: "crates/rust-test-input/src/lib.rs", directory: "/Users/starfire/Development/reilabs/starkware/hieratika", checksumkind: CSK_MD5, checksum: "178b5b568f49bd1e17834a7529756af1")
+!7 = !DINamespace(name: "hieratika_rust_test_input", scope: null)
 !8 = !DISubroutineType(types: !9)
 !9 = !{!10, !10, !10}
 !10 = !DIBasicType(name: "u64", size: 64, encoding: DW_ATE_unsigned)

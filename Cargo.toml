@@ -14,8 +14,8 @@ members = [
 # Here we set keys that are relevant across all packages, allowing them to be inherited.
 [workspace.package]
 version = "0.1.0"
-homepage = "https://github.com/reilabs/llvm-to-cairo"
-repository = "https://github.com/reilabs/llvm-to-cairo"
+homepage = "https://github.com/reilabs/hieratika"
+repository = "https://github.com/reilabs/hieratika"
 license-file = "LICENSE"
 
 authors = ["Reilabs"]
@@ -34,11 +34,11 @@ bimap = { version = "0.6.3", features = ["serde"] }
 clap = "4.5.16"
 inkwell = { version = "0.5.0", features = ["llvm18-0"] }
 itertools = "0.13.0"
-ltc-cli = { path = "crates/cli" }
-ltc-compiler = { path = "crates/compiler" }
-ltc-driver = { path = "crates/driver" }
-ltc-errors = { path = "crates/error" }
-ltc-flo = { path = "crates/flo" }
+hieratika-cli = { path = "crates/cli" }
+hieratika-compiler = { path = "crates/compiler" }
+hieratika-driver = { path = "crates/driver" }
+hieratika-errors = { path = "crates/error" }
+hieratika-flo = { path = "crates/flo" }
 thiserror = "1.0.63"
 tracing = "0.1.40"
 

@@ -1,12 +1,12 @@
 [package]
-name = "ltc-errors"
+name = "hieratika-errors"
 version.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license-file.workspace = true
 
 authors.workspace = true
-description = "The error types used by the LLVM to Cairo project."
+description = "The error types used by the Hieratika project."
 keywords.workspace = true
 categories.workspace = true
 

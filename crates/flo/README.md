@@ -1,14 +1,14 @@
 # `FlatLowered` Intermediate Representation
 
-The `FlatLowered` Object format (`FLO`) is an intermediate representation for the LLVM to Cairo
-project that is based on Cairo's `FlatLowered` but tailored for our use-case.
+The `FlatLowered` Object format (`FLO`) is an intermediate representation for the Hieratika project
+that is based on Cairo's `FlatLowered` but tailored for our use-case.
 
 In particular, it removes any dependency on the [Salsa](https://github.com/salsa-rs/salsa) database
 structures, as well as:
 
 - Allowing round-tripping to and from `FlatLowered`.
 - Forming the basis of the `.flo` (FlatLowered Object) object format for exchange between tools in
-  the LTC pipeline.
+  the Hieratika pipeline.
 - Adding support for features (such as linkage and relocations) that are not supported by the
   `FlatLowered`.
 

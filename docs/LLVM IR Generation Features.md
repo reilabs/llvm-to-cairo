@@ -64,8 +64,6 @@ To get the list of all flags `opt` accepts, without arch-specific options, call 
 $ opt -help | grep -ivE 'aarch64|amdgpu|arm|avr|hexagon|mips|msp430|nvptx|ppc|r600|riscv|si|systemz|wasm|x86'
 ```
 
-```
-
 On my machine (LLVM version 18.1.8 aarch64-apple-darwin23.6.0) this command returns 463 different
 flags.
 
@@ -133,4 +131,3 @@ require its own detailed research to understand fully.
 
 By understanding and utilizing these passes effectively, we can optimize the compilation process,
 resulting in efficient and performant executable binaries.
-```

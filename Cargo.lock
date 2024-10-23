@@ -198,6 +198,67 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
+name = "hieratika-cli"
+version = "0.1.0"
+dependencies = [
+ "ariadne",
+ "clap",
+ "hieratika-compiler",
+ "itertools 0.13.0",
+ "tracing",
+]
+
+[[package]]
+name = "hieratika-compiler"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bimap",
+ "chumsky",
+ "clap",
+ "derivative",
+ "downcast-rs",
+ "hieratika-errors",
+ "hieratika-flo",
+ "inkwell",
+ "itertools 0.13.0",
+ "ouroboros",
+ "tracing",
+]
+
+[[package]]
+name = "hieratika-driver"
+version = "0.1.0"
+dependencies = [
+ "ariadne",
+ "itertools 0.13.0",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "hieratika-errors"
+version = "0.1.0"
+dependencies = [
+ "ariadne",
+ "inkwell",
+ "thiserror",
+]
+
+[[package]]
+name = "hieratika-flo"
+version = "0.1.0"
+dependencies = [
+ "bimap",
+ "serde",
+ "serde_sexpr",
+]
+
+[[package]]
+name = "hieratika-rust-test-input"
+version = "0.1.0"
+
+[[package]]
 name = "inkwell"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -271,67 +332,6 @@ dependencies = [
  "regex-lite",
  "semver",
 ]
-
-[[package]]
-name = "ltc-cli"
-version = "0.1.0"
-dependencies = [
- "ariadne",
- "clap",
- "itertools 0.13.0",
- "ltc-compiler",
- "tracing",
-]
-
-[[package]]
-name = "ltc-compiler"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bimap",
- "chumsky",
- "clap",
- "derivative",
- "downcast-rs",
- "inkwell",
- "itertools 0.13.0",
- "ltc-errors",
- "ltc-flo",
- "ouroboros",
- "tracing",
-]
-
-[[package]]
-name = "ltc-driver"
-version = "0.1.0"
-dependencies = [
- "ariadne",
- "itertools 0.13.0",
- "thiserror",
- "tracing",
-]
-
-[[package]]
-name = "ltc-errors"
-version = "0.1.0"
-dependencies = [
- "ariadne",
- "inkwell",
- "thiserror",
-]
-
-[[package]]
-name = "ltc-flo"
-version = "0.1.0"
-dependencies = [
- "bimap",
- "serde",
- "serde_sexpr",
-]
-
-[[package]]
-name = "ltc-rust-test-input"
-version = "0.1.0"
 
 [[package]]
 name = "memchr"

@@ -1,6 +1,6 @@
 # A flake that sets up the necessary development environment for things.
 {
-  description = "LLVM to CairoVM";
+  description = "Hieratika: Compiling LLVM to CairoVM";
 
   # The things that we want to pin to.
   inputs = {
@@ -60,13 +60,13 @@
         };
 
         # Filter out things that aren't derivations for the `packages` output, or Nix gets mad.
-        llvmToCairo = lib.filterAttrs (lib.const lib.isDerivation) workspacePackages;
+        hieratika = lib.filterAttrs (lib.const lib.isDerivation) workspacePackages;
 
         # And for convenience, collect all the workspace members into a single derivation,
         # so we can check they all compile with one command, `nix build '.#all'`.
         all = pkgs.symlinkJoin {
-          name = "llvm-to-cairo-all";
-          paths = lib.attrValues llvmToCairo;
+          name = "hieratika-all";
+          paths = lib.attrValues hieratika;
         };
 
         # We get your default shell to make sure things feel familiar in the dev shell.
@@ -83,13 +83,13 @@
       in {
         packages = {
           inherit all;
-          default = llvmToCairo.ltc-cli;
-        } // llvmToCairo;
+          default = hieratika.hieratika-cli;
+        } // hieratika;
 
         # The default dev shell puts you in your native shell to make things feel happy.
         devShells.default = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
-          inputsFrom = lib.attrValues llvmToCairo;
+          inputsFrom = lib.attrValues hieratika;
           packages = devshellPackages;
 
           shellHook = ''
@@ -100,7 +100,7 @@
         # The dev shell for CI allows it to interpret commands properly.
         devShells.ci = craneLib.devShell {
           LLVM_SYS_180_PREFIX = "${pkgs.lib.getDev pkgs.llvmPackages_18.libllvm}";
-          inputsFrom = lib.attrValues llvmToCairo;
+          inputsFrom = lib.attrValues hieratika;
           packages = devshellPackages;
         };
       }
