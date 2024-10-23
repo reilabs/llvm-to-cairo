@@ -19,12 +19,14 @@ chumsky = "0.9.3"
 clap.workspace = true
 derivative = "2.2.0"
 downcast-rs = "1.2.1"
+ethnum.workspace = true
 inkwell.workspace = true
 itertools.workspace = true
 hieratika-errors.workspace = true
 hieratika-flo.workspace = true
 ouroboros = "0.18.4"
 tracing.workspace = true
+rand = "0.9.0-alpha.2"
 
 [dev-dependencies]
 anyhow.workspace = true

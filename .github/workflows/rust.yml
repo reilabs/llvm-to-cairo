@@ -2,9 +2,9 @@
 name: "Rust CI"
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["*"]
+    branches: [ "*" ]
 
 # Environment variables that will be set on all runners
 env:
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest"]
+        os: [ "ubuntu-latest", "macos-latest" ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code

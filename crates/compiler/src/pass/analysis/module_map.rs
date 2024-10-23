@@ -8,6 +8,7 @@
 
 use std::collections::HashMap;
 
+use ethnum::U256;
 use hieratika_errors::compile::{Error, Result};
 use inkwell::{
     module::{Linkage, Module},
@@ -91,6 +92,9 @@ impl BuildModuleMap {
     ///
     /// - [`Error`] if the module cannot be mapped successfully.
     pub fn map_module(&mut self, module: &Module) -> Result<ModuleMap> {
+        // First, we grab the module name.
+        let module_name = module.get_name().to_str()?;
+
         // We start by analyzing the data-layout of the module, which is important to
         // ensure that things match later on and that we are not being asked for things
         // that we do not or cannot support. This _may_ currently return errors due to
@@ -100,7 +104,7 @@ impl BuildModuleMap {
 
         // With our data layout obtained successfully, we can build our module map and
         // start adding top-level entries to it.
-        let mut mod_map = ModuleMap::new(data_layout);
+        let mut mod_map = ModuleMap::new(module_name, data_layout);
 
         // We then process the global definitions in scope and gather the relevant
         // information about them.
@@ -272,11 +276,15 @@ impl ConcretePass for BuildModuleMap {
 ///
 /// It contains information on the module's:
 ///
+/// - Name, useful for identifying the module in question.
 /// - Data layout, as given by the embedded data layout string.
 /// - Functions, as given by the function definitions and declarations.
 /// - Globals, as given by the global definitions and declarations.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ModuleMap {
+    /// The name for the module.
+    pub module_name: String,
+
     /// The data layout provided for this module.
     pub data_layout: DataLayout,
 
@@ -289,11 +297,30 @@ pub struct ModuleMap {
 
 impl ModuleMap {
     /// Creates a new instance of the output data for the module mapping pass.
+    ///
+    /// # Anonymous Modules
+    ///
+    /// If the module is anonymous—in other words that its name is an empty
+    /// string—it will have a name generated at random. Please note that the
+    /// underlying RNG **cannot be relied upon to be cryptographically secure**,
+    /// and should not be treated as such.
     #[must_use]
-    pub fn new(data_layout: DataLayout) -> Self {
+    pub fn new(name: &str, data_layout: DataLayout) -> Self {
+        let module_name = if name.is_empty() {
+            // This _is_ actually cryptographically secure, but the fact that it is (see the
+            // docs on `ThreadRng` for more details), is an implementation detail and need
+            // not be sustained through changes.
+            let rand_bytes: [u8; size_of::<U256>()] = rand::random();
+            let rand_num = U256::from_be_bytes(rand_bytes);
+            format!("{rand_num:#032x}")
+        } else {
+            name.to_string()
+        };
         let functions = HashMap::new();
         let globals = HashMap::new();
+
         Self {
+            module_name,
             data_layout,
             globals,
             functions,
@@ -303,8 +330,8 @@ impl ModuleMap {
     /// Creates a new trait object of the output data for the module mapping
     /// pass.
     #[must_use]
-    pub fn new_dyn(data_layout: DataLayout) -> Box<Self> {
-        Box::new(Self::new(data_layout))
+    pub fn new_dyn(name: &str, data_layout: DataLayout) -> Box<Self> {
+        Box::new(Self::new(name, data_layout))
     }
 }
 
@@ -372,7 +399,12 @@ mod test {
     use crate::{
         context::SourceContext,
         llvm::{data_layout::DataLayout, typesystem::LLVMType, TopLevelEntryKind},
-        pass::{analysis::module_map::BuildModuleMap, data::DynPassDataMap, ConcretePass, PassOps},
+        pass::{
+            analysis::module_map::{BuildModuleMap, ModuleMap},
+            data::DynPassDataMap,
+            ConcretePass,
+            PassOps,
+        },
     };
 
     /// A utility function to make it easy to load the testing context in all
@@ -380,6 +412,14 @@ mod test {
     fn get_text_context() -> SourceContext {
         SourceContext::create(Path::new(r"input/add.ll"))
             .expect("Unable to construct testing source context")
+    }
+
+    #[test]
+    fn generates_random_names_for_anon_modules() {
+        let map_1 = ModuleMap::new("", DataLayout::new("").unwrap());
+        let map_2 = ModuleMap::new("", DataLayout::new("").unwrap());
+
+        assert_ne!(map_1.module_name, map_2.module_name);
     }
 
     #[test]

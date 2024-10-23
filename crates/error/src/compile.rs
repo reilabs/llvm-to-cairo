@@ -44,6 +44,9 @@ pub enum Error {
     #[error("LLVM Error: {_0}")]
     LLVMError(String),
 
+    #[error("The module had a missing name during code generation")]
+    MissingModuleName,
+
     /// Emitted when an attempt is made to add a module to the compilation
     /// context, but cannot do soe compilation context, but cannot do so.
     #[error("Unable to add module to context: {_0}")]

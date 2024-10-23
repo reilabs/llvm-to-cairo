@@ -44,18 +44,20 @@
 #![allow(clippy::module_name_repetitions)] // Allows for better API naming
 #![allow(clippy::multiple_crate_versions)] // Enforced by our dependencies
 
+pub mod codegen;
 pub mod constant;
 pub mod context;
 pub mod llvm;
 pub mod pass;
 pub mod polyfill;
 
-use hieratika_errors::compile::{Error, Result};
+use hieratika_errors::compile::Result;
 use hieratika_flo::FlatLoweredObject;
 
 use crate::{
+    codegen::CodeGenerator,
     context::SourceContext,
-    pass::{data::DynPassDataMap, PassManager, PassManagerReturnData},
+    pass::{analysis::module_map::BuildModuleMap, PassManager, PassManagerReturnData},
     polyfill::PolyfillMap,
 };
 
@@ -123,6 +125,7 @@ pub struct Compiler {
     pub polyfill_map: PolyfillMap,
 }
 
+/// The basic operations required of the compiler.
 impl Compiler {
     /// Constructs a new compiler instance, wrapping the provided `context`
     /// describing the LLVM module to compile, the `passes` to run, and the
@@ -145,40 +148,20 @@ impl Compiler {
     ///
     /// - [`hieratika_errors::compile::Error`] if the compilation process fails
     ///   for any reason.
-    pub fn run(mut self) -> Result<CompilationResult> {
-        let PassManagerReturnData {
-            context: _context,
-            data: _data,
-        } = self.passes.run(self.context)?;
+    pub fn run(mut self) -> Result<FlatLoweredObject> {
+        // First we have to run all the passes and collect their data.
+        let PassManagerReturnData { context, data } = self.passes.run(self.context)?;
 
-        Err(Error::CompilationFailure(
-            "Compilation is not yet implemented".to_string(),
-        ))
-    }
-}
+        // After that, we can grab the module name out of the pass data.
+        let mod_name = data
+            .get::<BuildModuleMap>()
+            .expect("Module mapping pass has not been run, but it is required for code generation.")
+            .module_name
+            .clone();
 
-/// The result of compiling an LLVM IR module.
-#[derive(Debug)]
-pub struct CompilationResult {
-    /// The final state of the pass data after the compiler passes have been
-    /// executed.
-    pub pass_results: DynPassDataMap,
-
-    /// The `FLO` module that results from compilation.
-    pub result_module: FlatLoweredObject,
-}
-
-impl CompilationResult {
-    /// Constructs a new compilation result wrapping the final `FLO` module
-    /// and also containing the final output of any compiler passes.
-    #[must_use]
-    pub fn new(pass_results: DynPassDataMap) -> Self {
-        // TODO (#24) Actually compile to FLO.
-        let result_module = FlatLoweredObject::new("");
-        Self {
-            pass_results,
-            result_module,
-        }
+        // Then we can put our builder together and start the code generation process.
+        let builder = CodeGenerator::new(&mod_name, data, context)?;
+        builder.run()
     }
 }
 
