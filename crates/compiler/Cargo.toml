@@ -14,10 +14,16 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+bimap.workspace = true
+chumsky = "0.9.3"
 clap.workspace = true
-inkwell = { version = "0.5.0", features = ["llvm18-0"] }
+derivative = "2.2.0"
+downcast-rs = "1.2.1"
+inkwell.workspace = true
 itertools.workspace = true
 ltc-errors.workspace = true
+ltc-flo.workspace = true
+ouroboros = "0.18.4"
 tracing.workspace = true
 
 [dev-dependencies]
