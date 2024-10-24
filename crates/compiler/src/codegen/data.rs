@@ -2,12 +2,12 @@
 
 use hieratika_flo::FlatLoweredObject;
 
-/// The output for the code generator.
+/// The data store for the in-progress work of the code generator.
 ///
 /// This is intended to be handed as a mutable reference through each of the
 /// steps of the code generation process, and modified by each step.
 #[derive(Debug)]
-pub struct CodegenOutput {
+pub struct CodegenData {
     /// The underlying FLO that is being generated as part of the code
     /// generation process.
     ///
@@ -18,9 +18,9 @@ pub struct CodegenOutput {
     flat_lowered_object: FlatLoweredObject,
 }
 
-impl CodegenOutput {
-    /// Constructs a new code generator output for the module with the provided
-    /// name.
+impl CodegenData {
+    /// Constructs a new code generator data store for the module with the
+    /// provided name.
     pub fn new(name: &str) -> Self {
         let flat_lowered_object = FlatLoweredObject::new(name);
 
@@ -37,5 +37,11 @@ impl CodegenOutput {
     /// Gets a mutable reference to the underlying FLO being built.
     pub fn flo_mut(&mut self) -> &mut FlatLoweredObject {
         &mut self.flat_lowered_object
+    }
+}
+
+impl From<CodegenData> for FlatLoweredObject {
+    fn from(value: CodegenData) -> Self {
+        value.flat_lowered_object
     }
 }

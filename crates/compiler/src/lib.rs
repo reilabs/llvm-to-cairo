@@ -254,7 +254,8 @@ mod test {
         let ctx = SourceContext::create(Path::new(test_input))?;
 
         let compiler = CompilerBuilder::new(ctx).build();
-        assert!(compiler.run().is_err());
+        let result = compiler.run();
+        assert!(result.is_ok());
 
         Ok(())
     }

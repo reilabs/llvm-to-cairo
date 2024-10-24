@@ -1,12 +1,24 @@
 //! The infrastructure for building `FLO` objects to support the additional
 //! non-generic functionality not embedded in [`FlatLoweredObject`] itself.
 
-pub mod output;
+pub mod data;
 
 use hieratika_errors::compile::{Error, Result};
 use hieratika_flo::FlatLoweredObject;
+use inkwell::{
+    module::Module,
+    values::{FunctionValue, GlobalValue},
+};
 
-use crate::{codegen::output::CodegenOutput, context::SourceContext, pass::data::DynPassDataMap};
+use crate::{
+    codegen::data::CodegenData,
+    context::SourceContext,
+    llvm::TopLevelEntryKind,
+    pass::{
+        analysis::module_map::{BuildModuleMap, FunctionInfo, GlobalInfo},
+        data::DynPassDataMap,
+    },
+};
 
 /// Handles the minutiae of building a [`FlatLoweredObject`], as well as
 /// tracking all the additional metadata required to properly construct that
@@ -79,7 +91,7 @@ impl CodeGenerator {
     }
 }
 
-/// The builder functions themselves.
+/// The functionality that actually performs code generation.
 impl CodeGenerator {
     /// Executes the code generation process on a freshly created
     /// [`FlatLoweredObject`].
@@ -88,11 +100,104 @@ impl CodeGenerator {
     ///
     /// - [`Error`], if the code generation process fails for any reason.
     pub fn run(&self) -> Result<FlatLoweredObject> {
-        let _output = CodegenOutput::new(&self.name);
+        let mut cg_data = CodegenData::new(&self.name);
 
-        Err(Error::CompilationFailure(
-            "The compilation process has not yet been implemented".to_string(),
-        ))
+        self.context()
+            .analyze_module(|m| self.generate_module(m, &mut cg_data))?;
+
+        Ok(cg_data.into())
+    }
+
+    // TODO Operate as follows:
+    //
+    // 1. Iterate over _definitions_ of functions and for each:
+    //    1. Stub out a new "initial block" with that function signature.
+    //    2. Go through the basic blocks and generate based on them.
+    // 2. Iterate over _definitions_ of globals and register them in the compilation
+    //    context.
+    //    1. If they are non-const it is an error.
+    //    2. Take their definitions/initializers and register these.
+    // 3. Every symbol in the `ModuleMap` that is a declaration rather than a
+    //    definition should be declared as such in the symbol table.
+    // 4. If a definition is encountered before being seen, it should then be
+    //    registered in a lookup table (aux data in CodegenOutput).
+
+    /// Performs the code generation process for the entire `module` currently
+    /// being processed, generating equivalent object code into the provided
+    /// `data` output.
+    pub fn generate_module(&self, module: &Module, data: &mut CodegenData) -> Result<()> {
+        // We need the module map to be able to make correct code generation decisions
+        // here, so we start by grabbing this. If it doesn't exist, this is a programmer
+        // error, so we crash loudly.
+        let module_map = self.pass_data().get::<BuildModuleMap>().expect(
+            "The module mapping pass does not appear to have been run but is required for code \
+             generation.",
+        );
+
+        // We start by going through our functions, as these are the things we actually
+        // need to generate code for.
+        for function in module.get_functions() {
+            // We can only generate code for a function if it actually is _defined_.
+            // Otherwise, we just have to skip it; declarations are used for sanity checks
+            // but cannot result in generated code.
+            if let Some(f) = module_map.functions.get(function.get_name().to_str()?) {
+                if matches!(f.kind, TopLevelEntryKind::Definition) {
+                    self.generate_function(function, f, data)?
+                }
+            }
+        }
+
+        // We also potentially need to generate code for a global if it is initialized.
+        for global in module.get_globals() {
+            if let Some(g) = module_map.globals.get(global.get_name().to_str()?) {
+                if matches!(g.kind, TopLevelEntryKind::Definition) {
+                    self.generate_global(global, g, data)?
+                }
+            }
+        }
+
+        // Having generated both of these portions into the FLO, we are done for now.
+        Ok(())
+    }
+
+    /// Generates code for the provided `func`, described by `func_info`.
+    ///
+    /// Behavior will not be well-formed if `func_info` is not the function
+    /// information that corresponds to `func` at runtime.
+    pub fn generate_function(
+        &self,
+        _func: FunctionValue,
+        _func_info: &FunctionInfo,
+        _data: &mut CodegenData,
+    ) -> Result<()> {
+        println!("FUNCTION");
+        Ok(())
+    }
+
+    pub fn generate_global(
+        &self,
+        _global: GlobalValue,
+        _global_info: &GlobalInfo,
+        _data: &mut CodegenData,
+    ) -> Result<()> {
+        println!("GLOBAL");
+        Ok(())
+    }
+
+    pub fn generate_statement(&self, _data: &mut CodegenData) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn generate_expression(&self, _data: &mut CodegenData) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Builder functionality that is not part of the stateful process of code
+/// generation.
+impl CodeGenerator {
+    pub fn make_if(_output: &mut CodegenData) -> Result<()> {
+        Ok(())
     }
 }
 
