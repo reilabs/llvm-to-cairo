@@ -108,16 +108,16 @@ mod test {
 
     #[test]
     fn contains_dbg_declare() {
-        assert!(SpecialIntrinsics::new().intrinsics.contains_key("llvm.dbg.declare"))
+        assert!(SpecialIntrinsics::new().intrinsics.contains_key("llvm.dbg.declare"));
     }
 
     #[test]
     fn contains_dbg_value() {
-        assert!(SpecialIntrinsics::new().intrinsics.contains_key("llvm.dbg.value"))
+        assert!(SpecialIntrinsics::new().intrinsics.contains_key("llvm.dbg.value"));
     }
 
     #[test]
     fn contains_dbg_assign() {
-        assert!(SpecialIntrinsics::new().intrinsics.contains_key("llvm.dbg.assign"))
+        assert!(SpecialIntrinsics::new().intrinsics.contains_key("llvm.dbg.assign"));
     }
 }
