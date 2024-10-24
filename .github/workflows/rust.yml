@@ -1,5 +1,5 @@
 # Metadata for the actions workflow
-name: CI
+name: "Rust CI"
 on:
   push:
     branches: ["main"]
@@ -13,12 +13,14 @@ env:
   CARGO_TERM_COLOR: always # Always colour Cargo's output.
   CARGO_INCREMENTAL: 0 # Always run without incremental builds on CI.
   CARGO_PROFILE_DEV_DEBUG: 0 # Don't embed debug info even though the build is a dev build.
+  RUSTFLAGS: "-D warnings" # Elevate warnings to errors so clippy will fail CI.
+  RUSTDOCFLAGS: "-D warnings" # Elevate warnings to errors so clippy will fail CI.
 
 # Configuration for individual jobs
 jobs:
   # This job is responsible for running the unit and integration tests
   test:
-    name: "Test"
+    name: "Test Rust Code"
     strategy:
       fail-fast: false
       matrix:
@@ -71,7 +73,7 @@ jobs:
 
   # This job runs the linter.
   lint:
-    name: "Lint Code"
+    name: "Lint Rust Code"
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout Code
@@ -105,7 +107,7 @@ jobs:
 
   # This job checks the formatting of the code and other artifacts.
   formatting:
-    name: "Check Formatting"
+    name: "Check Rust Formatting"
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout Code
@@ -136,22 +138,36 @@ jobs:
         shell: bash
         run: |
           ${{ env.DEV_SHELL_LINUX }} --command cargo fmt --all -- --check
-      - name: Install Node Deps
-        shell: bash
-        run: |
-          ${{ env.DEV_SHELL_LINUX }} --command npm install
-      - name: Lint Documentation
-        shell: bash
-        run: |
-          ${{ env.DEV_SHELL_LINUX }} --command npx prettier --check .
 
-  licensing:
-    name: "Check Licenses"
+  documentation:
+    name: "Check Rust Documentation"
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      - uses: EmbarkStudios/cargo-deny-action@v1
+      - name: Install Lix
+        shell: bash
+        run: |
+          curl -sSf -L https://install.lix.systems/lix | sh -s -- install --no-confirm
+      - name: Restore Nix Cache
+        uses: actions/cache@v3
+        continue-on-error: true
         with:
-          manifest-path: ./Cargo.toml
-          command: check
+          path: |
+            ~/nix_store
+          key: nix-${{ hashFiles('**/flake.lock') }}-ubuntu-latest
+      - name: Restore Rust Cache
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: |
+            target/
+          key: rust-${{ hashFiles('**/Cargo.lock') }}-ubuntu-latest
+      - name: Build Lix Dependencies
+        shell: bash
+        run: |
+          ${{ env.DEV_SHELL_LINUX }}
+      - name: Check Documentation
+        shell: bash
+        run: |
+          ${{ env.DEV_SHELL_LINUX }} --command cargo doc --document-private-items

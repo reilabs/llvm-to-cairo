@@ -110,7 +110,6 @@ use crate::{
 ///
 /// We fully expect to modify the process in the future to target `Sierra`
 /// directly, giving us more control as we need it.
-#[allow(dead_code)]
 pub struct Compiler {
     /// The source context, containing references to the LLVM module to be
     /// compiled.
